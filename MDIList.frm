@@ -57,13 +57,13 @@
 		*Cast(MDIListType Ptr, Sender.Designer).Form_Create(Sender)
 	End Sub
 	
-	'Dim Shared MDIList As MDIListType
-	'
-	'#ifdef __FB_MAIN__
-	'	MDIList.Show
-	'	
-	'	App.Run
-	'#endif
+	Dim Shared MDIList As MDIListType
+	
+	#ifdef __FB_MAIN__
+		MDIList.Show
+		
+		App.Run
+	#endif
 '#End Region
 
 Private Sub MDIListType.Form_Create(ByRef Sender As Control)
@@ -72,13 +72,15 @@ Private Sub MDIListType.Form_Create(ByRef Sender As Control)
 	If .lstMdiChild.Count < 1 Then Exit Sub
 	Dim i As Integer
 	For i = 0 To .lstMdiChild.Count - 1
-		ListControl1.AddItem (Cast(MDIChildType Ptr, .lstMdiChild.Item(i))->Text, .lstMdiChild.Item(i))
+		ListControl1.AddItem (Cast(MDIChildType Ptr, .lstMdiChild.Item(i))->Text)
 	Next
 	ListControl1.ItemIndex = .actMdiChildIdx
 	End With
 End Sub
 
 Private Sub MDIListType.ListControl1_DblClick(ByRef Sender As Control)
+	If ListControl1.ItemIndex < 0 Then Exit Sub
 	ModalResult = ModalResults.OK
+	Tag = MDIMain.lstMdiChild.Item(ListControl1.ItemIndex)
 	CloseForm
 End Sub

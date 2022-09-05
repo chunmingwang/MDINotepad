@@ -3,7 +3,7 @@
 Const As Long  mGrowSize = 32768
 
 Private Function WStr2Ptr(ByRef SourceText As Const WString, ByRef rtnptr As WString Ptr) As Long
-	Dim i As Integer = Len(SourceText)
+	Dim i As Integer = Len(SourceText) + 1
 	If rtnptr Then Deallocate(rtnptr)
 	rtnptr = CAllocate (i * 2)
 	*rtnptr = SourceText

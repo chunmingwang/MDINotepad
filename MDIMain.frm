@@ -1285,17 +1285,27 @@ Private Sub MDIMainType.mnuWindow_Click(ByRef Sender As MenuItem)
 	Case "mnuWindowTileVertical"
 		SendMessage FClient, WM_MDITILE, MDITILE_VERTICAL, 0
 	Case "mnuWindowMore"
-		Dim frm As MDIListType Ptr
-		frm = New MDIListType
-		With *frm
-			.ShowModal(MDIMain)
+		With MDIList
+			.ShowModal()
 			If .ModalResult = ModalResults.OK Then
-				If .ListControl1.ItemIndex >-1 Then
-					Cast(MDIChildType Ptr, .ListControl1.ItemData(.ListControl1.ItemIndex))->SetFocus()
-				End If
+				If .Tag = 0 Then Exit Sub
+				Cast(MDIChildType Ptr, .Tag)->SetFocus()
 			End If
 		End With
-		Delete frm
+		
+		'Dim frm As MDIListType Ptr
+		'frm = New MDIListType
+		'With *frm
+		'	.ShowModal(MDIMain)
+		'	If .ModalResult = ModalResults.OK Then
+		'		Debug.Print "OK"
+		'		Debug.Print "Select: " & .ListControl1.ItemIndex
+		'		If .ListControl1.ItemIndex < 0 Then Exit Sub
+		'		Cast(MDIChildType Ptr, .ListControl1.ItemData(.ListControl1.ItemIndex))->SetFocus()
+		'	End If
+		'End With
+		'Delete frm
+		
 	Case Else
 		Cast(MDIChildType Ptr, Sender.Tag)->SetFocus()
 	End Select
@@ -1329,27 +1339,7 @@ Private Sub MDIMainType.MDIChildMenuUpdate()
 		Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
 		
 		mnuViewWordWarps.Checked = a->TextBox1.WordWraps
-		Select Case a->Encode
-		Case FileEncodings.Utf8
-			spEncode.Caption = "Utf8"
-		Case FileEncodings.Utf8BOM
-			spEncode.Caption = "Utf8 (BOM)"
-		Case FileEncodings.Utf16BOM
-			spEncode.Caption = "Utf16 (BOM)"
-		Case FileEncodings.Utf32BOM
-			spEncode.Caption = "Utf32 (BOM)"
-		Case Else
-			spEncode.Caption = "Plain Text CP:" & IIf(a->CodePage< 0, GetACP(), a->CodePage)
-		End Select
-		
-		Select Case a->NewLine
-		Case NewLineTypes.LinuxLF
-			spEOL.Caption = "Linux LF"
-		Case NewLineTypes.MacOSCR
-			spEOL.Caption = "MacOS CR"
-		Case Else
-			spEOL.Caption = "Windows CRLF"
-		End Select
+
 		
 		mnuEncodingPlainText.Caption = !"Plain Text\tCP:" & IIf(a->CodePage< 0, GetACP(), a->CodePage)
 		mnuEncodingPlainText.Checked = IIf(a->Encode = FileEncodings.PlainText, True, False)
@@ -1361,8 +1351,6 @@ Private Sub MDIMainType.MDIChildMenuUpdate()
 		mnuEncodingCRLF.Checked = IIf(a->NewLine = NewLineTypes.WindowsCRLF, True, False)
 		mnuEncodingLF.Checked = IIf(a->NewLine = NewLineTypes.LinuxLF, True, False)
 		mnuEncodingCR.Checked = IIf(a->NewLine = NewLineTypes.MacOSCR, True, False)
-		
-		spFileName.Caption = a->Text
 		
 		ControlEnabled(True)
 	End If
@@ -1504,8 +1492,34 @@ Private Sub MDIMainType.MDIChildClick(Child As Any Ptr)
 	Dim a As MDIChildType Ptr = Child
 	Dim As Integer sx, sy, ex, ey
 	Dim As Integer s, e
+	
+	Select Case a->Encode
+	Case FileEncodings.Utf8
+		spEncode.Caption = "Utf8"
+	Case FileEncodings.Utf8BOM
+		spEncode.Caption = "Utf8 (BOM)"
+	Case FileEncodings.Utf16BOM
+		spEncode.Caption = "Utf16 (BOM)"
+	Case FileEncodings.Utf32BOM
+		spEncode.Caption = "Utf32 (BOM)"
+	Case Else
+		spEncode.Caption = "Plain Text CP:" & IIf(a->CodePage< 0, GetACP(), a->CodePage)
+	End Select
+	
+	Select Case a->NewLine
+	Case NewLineTypes.LinuxLF
+		spEOL.Caption = "Linux LF"
+	Case NewLineTypes.MacOSCR
+		spEOL.Caption = "MacOS CR"
+	Case Else
+		spEOL.Caption = "Windows CRLF"
+	End Select
+
+	spFileName.Caption = a->Text
+	
 	a->TextBox1.GetSel(sy, sx, ey, ex)
 	a->TextBox1.GetSel(s, e)
+	
 	If s = e Then
 		spLocation.Caption = "Locate at (" & sy & ":" & sx & ") " & s
 	Else
@@ -1515,6 +1529,7 @@ Private Sub MDIMainType.MDIChildClick(Child As Any Ptr)
 		Else
 		End If
 	End If
+	
 	If frmGoto.Visible = True Then
 		frmGoto.lblMsg.Text = "Line number (1 -" & a->TextBox1.LinesCount & ")"
 		frmGoto.txtLineNo.Text = "" & sy + 1
