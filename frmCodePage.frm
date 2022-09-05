@@ -449,7 +449,7 @@
 			.Parent = @This
 			Dim i As Integer
 			For i = 0 To CodePageCount
-				.AddItem(CodePageStr(i), CodePageNum(i))
+				.AddItem(CodePageStr(i), Cast(Any Ptr, CodePageNum(i)))
 			Next
 		End With
 		' txtPreview
@@ -543,7 +543,7 @@ Private Sub frmCodePageType.cmdOK_Click(ByRef Sender As Control)
 End Sub
 
 Private Sub frmCodePageType.lstCodePage_Click(ByRef Sender As Control)
-	CodePage= lstCodePage.ItemData(lstCodePage.ItemIndex)
+	CodePage = Cast(Integer, lstCodePage.ItemData(lstCodePage.ItemIndex))
 	chkPreview_Click(chkPreview)
 End Sub
 
