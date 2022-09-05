@@ -1,0 +1,8 @@
+2022/08/29
+1. New form template code applied
+2. Change the click event code
+from
+Select Case Sender.Text
+to
+Select Case Sender.Name
+3. Add Toobar, OpenFileDialog, SaveFileDialog
