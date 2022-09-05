@@ -974,7 +974,7 @@ Private Sub MDIMainType.FileOpen(ByRef FileName As Const WString)
 			frmCodePage.ShowModal(MDIMain)
 			If frmCodePage.ModalResult <> ModalResults.OK Then Exit Sub
 			Encode = frmCodePage.cobEncod.ItemIndex 
-			CodePage = frmCodePage.lstCodePage.ItemData(frmCodePage.lstCodePage.ItemIndex)
+			CodePage = Cast(Integer, frmCodePage.lstCodePage.ItemData(frmCodePage.lstCodePage.ItemIndex))
 		End If
 	End If
 
@@ -1008,7 +1008,7 @@ Private Sub MDIMainType.FileInsert(ByRef FileName As Const WString, Child As Any
 			frmCodePage.ShowModal(MDIMain)
 			If frmCodePage.ModalResult <> ModalResults.OK Then Exit Sub
 			Encode = frmCodePage.cobEncod.ItemIndex 
-			CodePage = frmCodePage.lstCodePage.ItemData(frmCodePage.lstCodePage.ItemIndex)
+			CodePage = Cast(Integer, frmCodePage.lstCodePage.ItemData(frmCodePage.lstCodePage.ItemIndex))
 		End If
 	End If
 
@@ -1184,7 +1184,7 @@ Private Sub MDIMainType.mnuEncoding_Click(ByRef Sender As MenuItem)
 		If frmCodePage.ModalResult <> ModalResults.OK Then Exit Sub
 		'End If
 		a->Encode = frmCodePage.cobEncod.ItemIndex 'FileEncodings.PlainText
-		a->CodePage = frmCodePage.lstCodePage.ItemData(frmCodePage.lstCodePage.ItemIndex)
+		a->CodePage = Cast(Integer, frmCodePage.lstCodePage.ItemData(frmCodePage.lstCodePage.ItemIndex))
 	Case "mnuEncodingUtf8"
 		a->Encode = FileEncodings.Utf8
 	Case "mnuEncodingUtf8BOM"
@@ -1269,11 +1269,11 @@ Private Sub MDIMainType.mnuWindow_Click(ByRef Sender As MenuItem)
 	
 	Select Case Sender.Name
 	Case "mnuWindowClose"
-		h = SendMessage(FClient, WM_MDIGETACTIVE, 0, 0)
+		h = Cast(HWND, SendMessage(FClient, WM_MDIGETACTIVE, 0, 0))
 		If h Then SendMessage(h, WM_CLOSE, 0, 0)
 	Case "mnuWindowCloseAll"
 		Do
-			h = SendMessage(FClient, WM_MDIGETACTIVE, 0, 0)
+			h = Cast(HWND, SendMessage(FClient, WM_MDIGETACTIVE, 0, 0))
 			If h Then SendMessage(h, WM_CLOSE, 0, 0)
 		Loop While (h)
 	Case "mnuWindowCascade"
@@ -1485,7 +1485,7 @@ Private Sub MDIMainType.MDIChildActivate(Child As Any Ptr)
 	MDIChildMenuUpdate()
 	Dim a As MDIChildType Ptr = Child
 	Dim FileInfo As SHFILEINFO
-	Dim h As Any Ptr = SHGetFileInfo(*a->mFile, 0, @FileInfo, SizeOf(FileInfo), SHGFI_SYSICONINDEX)
+	Dim h As Any Ptr = Cast(Any Ptr, SHGetFileInfo(*a->mFile, 0, @FileInfo, SizeOf(FileInfo), SHGFI_SYSICONINDEX))
 	SendMessage(a->Handle, WM_SETICON, 0, Cast(LPARAM, ImageList_GetIcon(h, FileInfo.iIcon, 0)))
 	'SendMessage(spFileName.Icon.Handle, WM_SETICON, 0, Cast(LPARAM, ImageList_GetIcon(h, FileInfo.iIcon, 0)))
 	MDIChildClick(Child)
@@ -1493,7 +1493,7 @@ End Sub
 
 Private Sub MDIMainType.MDIChildDestroy(Child As Any Ptr)
 	lstMdiChild.Remove(lstMdiChild.IndexOf(Child))
-	Delete Child
+	Delete Cast(MDIChildType Ptr, Child)
 	
 	If lstMdiChild.Count > 0 Then Exit Sub
 	actMdiChildIdx = -1
