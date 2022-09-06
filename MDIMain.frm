@@ -1271,6 +1271,7 @@ Private Sub MDIMainType.FileOpen(ByRef FileName As Const WString)
 				frmCodePage.chkSystemCP_Click(frmCodePage.chkSystemCP)
 				frmCodePage.SetCodePage(-1)
 				frmCodePage.lblFile.Text = "" + FileName
+				frmCodePage.ModalResult = ModalResults.None
 				frmCodePage.ShowModal(MDIMain)
 				If frmCodePage.ModalResult <> ModalResults.OK Then Exit Sub
 				Encode = frmCodePage.cobEncod.ItemIndex
