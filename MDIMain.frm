@@ -2,8 +2,11 @@
 #include once "vbcompat.bi"
 
 '#Region "Form"
-	#if defined(__FB_WIN32__) AndAlso defined(__FB_MAIN__)
-		#cmdline "Form1.rc"
+	#if defined(__FB_MAIN__) AndAlso Not defined(__MAIN_FILE__)
+		#define __MAIN_FILE__ __FILE__
+		#ifdef __FB_WIN32__
+			#cmdline "Form1.rc"
+		#endif
 	#endif
 	
 	#include once "mff/Form.bi"
@@ -1134,7 +1137,7 @@
 	
 	Dim Shared MDIMain As MDIMainType
 	
-	#ifdef __FB_MAIN__
+	#if __MAIN_FILE__ = __FILE__
 		MDIMain.Show
 		
 		App.Run
@@ -1275,13 +1278,13 @@ Private Sub MDIMainType.FileOpen(ByRef FileName As Const WString)
 			End If
 		End If
 		a = MDIChildNew()
-		a->CreateWnd
+		a->Show(MDIMain)
+		a->TextBox1.Text = TextFromFile(FileName, Encode, NewLine, CodePage)
 		a->SetFile(FileName)
 		a->Encode = Encode
 		a->NewLine = NewLine
 		a->CodePage = CodePage
-		a->Show(MDIMain)
-		a->TextBox1.Text = TextFromFile(FileName, Encode, NewLine, CodePage)
+		MDIChildActivate(a)
 	Else
 		a = lstMdiChild.Item(i)
 		a->SetFocus()
@@ -1508,7 +1511,7 @@ Private Sub MDIMainType.mnuEncoding_Click(ByRef Sender As MenuItem)
 	End Select
 	
 	a->Changed = True
-	MDIChildMenuUpdate()
+	MDIChildActivate(a)
 End Sub
 
 Private Sub MDIMainType.mnuConvert_Click(ByRef Sender As MenuItem)

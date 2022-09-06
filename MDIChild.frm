@@ -1,6 +1,9 @@
 ﻿'#Region "Form"
-	#if defined(__FB_WIN32__) AndAlso defined(__FB_MAIN__)
-		#cmdline "Form1.rc"
+	#if defined(__FB_MAIN__) AndAlso Not defined(__MAIN_FILE__)
+		#define __MAIN_FILE__ __FILE__
+		#ifdef __FB_WIN32__
+			#cmdline "Form1.rc"
+		#endif
 	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/TextBox.bi"
@@ -9,7 +12,7 @@
 	
 	Type MDIChildType Extends Form
 		Dim Index As Integer = -1
-		Dim CodePage As UINT = GetACP()
+		Dim CodePage As Integer = GetACP()
 		Dim Encode As FileEncodings = -1 
 		Dim NewLine As NewLineTypes = -1 
 		Dim mFile As WString Ptr = NULL
@@ -110,7 +113,7 @@
 	
 	'Dim Shared MDIChild As MDIChildType
 	'
-	'#ifdef __FB_MAIN__
+	'#if __MAIN_FILE__ = __FILE__
 	'	MDIChild.Show
 	'	
 	'	App.Run
