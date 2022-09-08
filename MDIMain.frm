@@ -110,7 +110,7 @@
 		' MDIMain
 		With This
 			.Name = "MDIMain"
-			.Text = "VFBE MDI Notepad32"
+			.Text = "VFBE MDI Notepad"
 			.Designer = @This
 			.Menu = @MainMenu1
 			.FormStyle = FormStyles.fsMDIForm
@@ -225,6 +225,8 @@
 		' OpenFileDialog1
 		With OpenFileDialog1
 			.Name = "OpenFileDialog1"
+			.MultiSelect = True
+			.Filter = "All Files (*.*)|*.*"
 			.SetBounds 60, 40, 16, 16
 			.Designer = @This
 			.Parent = @This
@@ -232,6 +234,7 @@
 		' SaveFileDialog1
 		With SaveFileDialog1
 			.Name = "SaveFileDialog1"
+			.Filter = "All Files (*.*)|*.*"
 			.SetBounds 80, 40, 16, 16
 			.Designer = @This
 			.Parent = @This
@@ -1325,9 +1328,11 @@ Private Sub MDIMainType.mnuFile_Click(ByRef Sender As MenuItem)
 			FileSave(lstMdiChild.Item(i))
 		Next
 	Case "mnuFileOpen"
-		OpenFileDialog1.Filter = "All Files (*.*)|*.*"
 		If OpenFileDialog1.Execute() Then
-			FileOpen(OpenFileDialog1.FileName)
+			For i = 0 To OpenFileDialog1.FileNames.Count - 1
+				FileOpen(OpenFileDialog1.FileNames.Item(i))
+				App.DoEvents()
+			Next
 		End If
 	Case "mnuFileBrowse"
 		a = lstMdiChild.Item(actMdiChildIdx)
@@ -1349,7 +1354,6 @@ End Sub
 Private Function MDIMainType.FileSaveAs(Child As Any Ptr) As MessageResult
 	Dim a As MDIChildType Ptr = Child
 	Dim msr As MessageResult = MessageResult.mrYes
-	SaveFileDialog1.Filter = "All Files (*.*)|*.*"
 	SaveFileDialog1.Caption = "Save as: " & a->Text
 	If SaveFileDialog1.Execute() Then
 		If PathFileExists(SaveFileDialog1.FileName) Then
@@ -1487,7 +1491,6 @@ Private Sub MDIMainType.mnuEdit_Click(ByRef Sender As MenuItem)
 		frmFindReplace.btnFindReplace_Click(frmFindReplace.btnShowHide)
 		frmFindReplace.Show(MDIMain)
 	Case "mnuEditFileInsert"
-		OpenFileDialog1.Filter = "All Files (*.*)|*.*"
 		If OpenFileDialog1.Execute() Then
 			FileInsert(OpenFileDialog1.FileName, a)
 		End If
