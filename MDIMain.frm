@@ -29,29 +29,28 @@
 	
 	Type MDIMainType Extends Form
 		'mdichild
-		Dim lstMdiChild As List
 		Dim actMdiChildIdx As Integer = -1
 		Dim CloseResult As ModalResults = ModalResults.Yes
+		Dim lstMdiChild As List
 		
+		Declare Function MDIChildClose(Child As Any Ptr) As MessageResult
 		Declare Function MDIChildFind(ByRef newName As Const WString) As Integer
 		Declare Function MDIChildNew() As Any Ptr
 		Declare Sub MDIChildActivate(Child As Any Ptr)
-		Declare Sub MDIChildDestroy(Child As Any Ptr)
 		Declare Sub MDIChildClick(Child As Any Ptr)
-		Declare Function MDIChildClose(Child As Any Ptr) As MessageResult
-		Declare Sub ControlEnabled(Enabled As Boolean)
+		Declare Sub MDIChildDestroy(Child As Any Ptr)
+		Declare Sub MDIChildInsertText(Child As Any Ptr, ByRef Text As Const WString)
 		
 		Declare Function FileSave(Child As Any Ptr) As MessageResult
 		Declare Function FileSaveAs(Child As Any Ptr) As MessageResult
-		Declare Sub FileOpen(ByRef FileName As Const WString)
+		Declare Sub ControlEnabled(Enabled As Boolean)
 		Declare Sub FileInsert(ByRef FileName As Const WString, Child As Any Ptr)
-		
-		Dim mFindBack As Boolean = False
-		
-		Declare Sub Find(ByRef FindStr As Const WString, ByVal FindCase As Boolean = False,ByVal FindWarp As Boolean=True, ByVal FindBack As Boolean = False)
+		Declare Sub FileOpen(ByRef FileName As Const WString)
+		Declare Sub Find(ByRef FindStr As Const WString, ByVal FindCase As Boolean = False, ByVal FindWarp As Boolean = True, ByVal FindBack As Boolean = False)
+		Declare Sub GotoLineNo(ByVal LineNumber As Integer)
 		Declare Sub Replace(ByRef FindStr As Const WString, ByRef ReplaceStr As Const WString, ByVal FindCase As Boolean = False, ByVal FindWarp As Boolean = True)
 		Declare Sub ReplaceAll(ByRef FindStr As Const WString, ByRef ReplaceStr As Const WString, ByVal FindCase As Boolean = False)
-		Declare Sub GotoLineNo(ByVal LineNumber As Integer)
+		Dim mFindBack As Boolean = False
 		
 		'mdichild menu
 		Dim mnuWindowCount As Integer = -1
@@ -1445,14 +1444,7 @@ Private Sub MDIMainType.FileInsert(ByRef FileName As Const WString, Child As Any
 		End If
 	End If
 	
-	Dim a As MDIChildType Ptr = Child
-	Dim s As WString Ptr
-	WStr2Ptr("File Insert Start Here: " & FileName & !"!\r\n" & TextFromFile(FileName, Encode, NewLine, CodePage) & !"\r\nFile Insert End Here: " & FileName & !"!\r\n", s)
-	Dim i As Integer = a->TextBox1.SelStart
-	a->TextBox1.SelText = *s
-	a->TextBox1.SelStart = i
-	a->TextBox1.SelLength = Len(*s)
-	If s Then Deallocate(s)
+	MDIChildInsertText(Child, !"\r\nFile Insert Start Here: " & FileName & !"\r\n" & TextFromFile(FileName, Encode, NewLine, CodePage) & !"\r\nFile Insert End Here: " & FileName & !"!\r\n")
 End Sub
 
 Private Sub MDIMainType.mnuEdit_Click(ByRef Sender As MenuItem)
@@ -1879,6 +1871,14 @@ Private Function MDIMainType.MDIChildClose(Child As Any Ptr) As MessageResult
 	End If
 	Return msr
 End Function
+
+Private Sub MDIMainType.MDIChildInsertText(Child As Any Ptr, ByRef Text As Const WString)
+	Dim a As MDIChildType Ptr = Child
+	Dim i As Long = a->TextBox1.SelStart
+	a->TextBox1.SelText = "" + Text
+	a->TextBox1.SelStart = i
+	a->TextBox1.SelLength = Len(Text)
+End Sub
 
 Private Sub MDIMainType.MDIChildClick(Child As Any Ptr)
 	Dim a As MDIChildType Ptr = Child
