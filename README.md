@@ -19,8 +19,6 @@ Goto
 
 ![image](https://user-images.githubusercontent.com/35757455/189488957-90a783b1-20bb-4120-a547-c681665dad37.png)
 
-File
-
 Todo:
 
 File Search
