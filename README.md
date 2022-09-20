@@ -19,16 +19,16 @@ Goto
 
 ![image](https://user-images.githubusercontent.com/35757455/189488957-90a783b1-20bb-4120-a547-c681665dad37.png)
 
-Todo:
+Todo preview:
 
 File Search
 
-![image](https://user-images.githubusercontent.com/35757455/189489280-3a9e4251-cddd-47a2-ba92-28200c91c3f1.png)
+![image](https://user-images.githubusercontent.com/35757455/191150106-3269f629-55a9-4636-b6ac-954fae175cf0.png)
 
 File Sync
 
-![image](https://user-images.githubusercontent.com/35757455/189489195-e86c6e28-5aba-4d7c-b761-45c3ad309f36.png)
+![image](https://user-images.githubusercontent.com/35757455/191150170-4a1bcf6f-fb0c-4576-ab29-e25508931e54.png)
 
 Hash
 
-![image](https://user-images.githubusercontent.com/35757455/189489240-f99cbf04-6fce-455f-a98d-e0de173822f1.png)
+![image](https://user-images.githubusercontent.com/35757455/191150043-8d9d2391-9dad-4386-b5d3-8b2fc4dce0c3.png)
