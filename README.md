@@ -9,7 +9,7 @@ Dark Mode
 
 Code Page
 
-![image](https://user-images.githubusercontent.com/35757455/189489019-317f99a6-efae-4100-bf3f-1d87aebd4311.png)
+![image](https://user-images.githubusercontent.com/35757455/192557311-bac8b3e0-ec5f-49f4-9879-03e46e7290f1.png)
 
 Find & Replace
 
