@@ -1,0 +1,13 @@
+﻿Set Profile=1
+A Path=F:\OfficePC_Update
+B Path=E:\OfficePC_Update
+Compare Data=1
+Compare Mode=2
+Increment=false
+Duplication=true
+Synchronization=false
+Copy Empty Path=true
+Log Nothing=false
+Log Memory=true
+Log File=false
+Log FileName=FileSync.log

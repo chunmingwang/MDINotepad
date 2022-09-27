@@ -1,14 +1,12 @@
-#include once "Text.bi"
-#include once "vbcompat.bi"
-
 '#Region "Form"
+	#define __MDI__ MDIMain
 	#if defined(__FB_MAIN__) AndAlso Not defined(__MAIN_FILE__)
-		#define __MAIN_FILE__ __FILE__
+		#define __MAIN_FILE__
+		Const _MAIN_FILE_ = __FILE__
 		#ifdef __FB_WIN32__
-			#cmdline "Form1.rc"
+			#cmdline "MDINotepad.rc"
 		#endif
 	#endif
-	
 	#include once "mff/Form.bi"
 	#include once "mff/Menus.bi"
 	#include once "mff/ReBar.bi"
@@ -22,16 +20,21 @@
 	#include once "mff/Printer.bi"
 	#include once "mff/PageSetupDialog.bi"
 	
+	#include once "Text.bi"
+	#include once "TimeMeter.bi"
+	
 	Using My.Sys.Forms
 	#ifdef __USE_WINAPI__
 		InitDarkMode
 	#endif
 	
 	Type MDIMainType Extends Form
+		Dim timr As TimeMeter
+		
 		'mdichild
-		Dim actMdiChildIdx As Integer = -1
-		Dim CloseResult As ModalResults = ModalResults.Yes
+		Dim actMdiChild As Any Ptr
 		Dim lstMdiChild As List
+		Dim CloseResult As ModalResults = ModalResults.Yes
 		
 		Declare Function MDIChildClose(Child As Any Ptr) As MessageResult
 		Declare Function MDIChildFind(ByRef newName As Const WString) As Integer
@@ -40,39 +43,44 @@
 		Declare Sub MDIChildClick(Child As Any Ptr)
 		Declare Sub MDIChildDestroy(Child As Any Ptr)
 		Declare Sub MDIChildInsertText(Child As Any Ptr, ByRef Text As Const WString)
+		Declare Sub MDIChildMenuUpdate()
 		
 		Declare Function FileSave(Child As Any Ptr) As MessageResult
 		Declare Function FileSaveAs(Child As Any Ptr) As MessageResult
-		Declare Sub ControlEnabled(Enabled As Boolean)
-		Declare Sub FileInsert(ByRef FileName As Const WString, Child As Any Ptr)
 		Declare Sub FileOpen(ByRef FileName As Const WString)
-		Declare Sub Find(ByRef FindStr As Const WString, ByVal FindCase As Boolean = False, ByVal FindWarp As Boolean = True, ByVal FindBack As Boolean = False)
+		Declare Sub FileInsert(ByRef FileName As Const WString, Child As Any Ptr)
+		
+		Declare Sub ControlEnabled(Enabled As Boolean)
+		
+		Declare Sub Find(ByRef FindStr As Const WString, ByVal MatchCase As Boolean = False, ByVal FindWarp As Boolean = True, ByVal FindBack As Boolean = False)
 		Declare Sub GotoLineNo(ByVal LineNumber As Integer)
-		Declare Sub Replace(ByRef FindStr As Const WString, ByRef ReplaceStr As Const WString, ByVal FindCase As Boolean = False, ByVal FindWarp As Boolean = True)
-		Declare Sub ReplaceAll(ByRef FindStr As Const WString, ByRef ReplaceStr As Const WString, ByVal FindCase As Boolean = False)
+		Declare Sub Replace(ByRef FindStr As Const WString, ByRef ReplaceStr As Const WString, ByVal MatchCase As Boolean = False, ByVal FindWarp As Boolean = True)
+		Declare Sub ReplaceAll(ByRef FindStr As Const WString, ByRef ReplaceStr As Const WString, ByVal MatchCase As Boolean = False)
+		
 		Dim mFindBack As Boolean = False
 		
 		'mdichild menu
 		Dim mnuWindowCount As Integer = -1
 		Dim mnuWindows(Any) As MenuItem Ptr
-		Declare Sub MDIChildMenuUpdate()
 		
-		Declare Static Sub _mnuEdit_Click(ByRef Sender As MenuItem)
-		Declare Sub mnuEdit_Click(ByRef Sender As MenuItem)
 		Declare Static Sub _mnuFile_Click(ByRef Sender As MenuItem)
 		Declare Sub mnuFile_Click(ByRef Sender As MenuItem)
-		Declare Static Sub _mnuWindow_Click(ByRef Sender As MenuItem)
-		Declare Sub mnuWindow_Click(ByRef Sender As MenuItem)
-		Declare Static Sub _mnuView_Click(ByRef Sender As MenuItem)
-		Declare Sub mnuView_Click(ByRef Sender As MenuItem)
-		Declare Static Sub _mnuHelp_Click(ByRef Sender As MenuItem)
-		Declare Sub mnuHelp_Click(ByRef Sender As MenuItem)
+		Declare Static Sub _mnuEdit_Click(ByRef Sender As MenuItem)
+		Declare Sub mnuEdit_Click(ByRef Sender As MenuItem)
 		Declare Static Sub _mnuEncoding_Click(ByRef Sender As MenuItem)
 		Declare Sub mnuEncoding_Click(ByRef Sender As MenuItem)
 		Declare Static Sub _ToolBar1_ButtonClick(ByRef Sender As ToolBar, ByRef Button As ToolButton)
 		Declare Sub ToolBar1_ButtonClick(ByRef Sender As ToolBar,ByRef Button As ToolButton)
 		Declare Static Sub _mnuConvert_Click(ByRef Sender As MenuItem)
 		Declare Sub mnuConvert_Click(ByRef Sender As MenuItem)
+		Declare Static Sub _mnuView_Click(ByRef Sender As MenuItem)
+		Declare Sub mnuView_Click(ByRef Sender As MenuItem)
+		Declare Static Sub _mnuTools_Click(ByRef Sender As MenuItem)
+		Declare Sub mnuTools_Click(ByRef Sender As MenuItem)
+		Declare Static Sub _mnuWindow_Click(ByRef Sender As MenuItem)
+		Declare Sub mnuWindow_Click(ByRef Sender As MenuItem)
+		Declare Static Sub _mnuHelp_Click(ByRef Sender As MenuItem)
+		Declare Sub mnuHelp_Click(ByRef Sender As MenuItem)
 		Declare Static Sub _Form_DropFile(ByRef Sender As Control, ByRef Filename As WString)
 		Declare Sub Form_DropFile(ByRef Sender As Control, ByRef Filename As WString)
 		Declare Static Sub _Form_Create(ByRef Sender As Control)
@@ -84,11 +92,12 @@
 		Declare Constructor
 		
 		Dim As MainMenu MainMenu1
-		Dim As MenuItem mnuFile, mnuFileNew, mnuFileOpen, mnuFileBar1, mnuFileSave, mnuFileSaveAs, mnuFileSaveAll, mnuFileBar2, mnuFileBrowse, mnuFileBar3, mnuFilePrintSetup, mnuFilePrintPreview, mnuFilePrint, mnuFileBar4, mnuFileExit
+		Dim As MenuItem mnuFile, mnuFileNew, mnuFileOpen, mnuFileBar1, mnuFileSave, mnuFileSaveAs, mnuFileSaveAll, mnuFileBar2, mnuFileBrowse, mnuFileBar3, mnuFilePageSetup, mnuFilePrintPreview, mnuFilePrint, mnuFileBar4, mnuFileExit
 		Dim As MenuItem mnuEdit, mnuEditRedo, mnuEditUndo, mnuEditBar1, mnuEditCut, mnuEditCopy, mnuEditPaste, mnuEditDelete, mnuEditBar2, mnuEditFileInsert, mnuEditBar3, mnuEditFind, mnuEditFindNext, mnuEditFindBack, mnuEditReplace, mnuEditGoto, mnuEditBar4, mnuEditDSelectAll, mnuEditDateTime
 		Dim As MenuItem mnuView, mnuViewToolbar, mnuViewStatusBar, mnuViewBar1, mnuViewDarkMode, mnuViewBar2, mnuViewWordWarps, mnuViewFont, mnuViewAllFont, mnuViewBackColor, mnuViewAllBackColor
 		Dim As MenuItem mnuEncoding, mnuEncodingPlainText, mnuEncodingUtf8, mnuEncodingUtf8BOM, mnuEncodingUtf16BOM, mnuEncodingUtf32BOM, mnuEncodingBar1, mnuEncodingCRLF, mnuEncodingLF, mnuEncodingCR
 		Dim As MenuItem mnuConvert, mnuConvertTraditional, mnuConvertSimplified, mnuConvertBar1, mnuConvertFullWidth, mnuConvertHalfWidth, mnuConvertLowerCase, mnuConvertUpperCase, mnuConvertTitleCase, mnuConvertBar2, mnuConvertBIG5ToGB, mnuConvertGBToBIG5
+		Dim As MenuItem mnuTools, mnuToolsFileSearch, mnuToolsFileSync, mnuToolsHash
 		Dim As MenuItem mnuWindow, mnuWindowTileHorizontal, mnuWindowTileVertical, mnuWindowCascade, mnuWindowArrangeIcons, mnuWindowBar1, mnuWindowClose, mnuWindowCloseAll
 		Dim As MenuItem mnuHelp, mnuHelpAbout
 		Dim As ImageList ImageList1, ImageList2
@@ -96,10 +105,15 @@
 		Dim As ToolBar ToolBar1
 		Dim As OpenFileDialog OpenFileDialog1
 		Dim As SaveFileDialog SaveFileDialog1
-		Dim As ToolButton tbFileNew, tbFileOpen, tbFileSave, tbFileSaveAll, ToolButton1, tbEditRedo, tbEditUndo, tbEditCut, tbEditCopy, tbEditPaste, ToolButton2, tbEditFind, tbEditFindNext, tbEditFindBack, tbEditReplace, ToolButton3, tbViewFont, tbViewBColor, tbViewDarkMode, ToolButton4, tbWindowHorizontal, tbWindowVertical, tbWindowCascade, tbWindowIcon, tbWindowClose, tbWindowCloseAll
+		Dim As ToolButton tbFileNew, tbFileOpen, tbFileSave, tbFileSaveAll
+		Dim As ToolButton ToolButton1, tbEditRedo, tbEditUndo, tbEditCut, tbEditCopy, tbEditPaste
+		Dim As ToolButton ToolButton2, tbEditFind, tbEditFindNext, tbEditFindBack, tbEditReplace
+		Dim As ToolButton ToolButton3, tbViewFont, tbViewBColor, tbViewDarkMode
+		Dim As ToolButton ToolButton4, tbToolFileSearch, tbToolFileSync, tbToolHash
+		Dim As ToolButton ToolButton5, tbWindowHorizontal, tbWindowVertical, tbWindowCascade, tbWindowIcon, tbWindowClose, tbWindowCloseAll
 		Dim As ColorDialog ColorDialog1
 		Dim As FontDialog FontDialog1
-		Dim As StatusPanel spFileName, spSpace, spLocation, spEncode, spEOL
+		Dim As StatusPanel spFileName, spSpeed, spSpace, spLocation, spEncode, spEOL
 		Dim As PrintDialog PrintDialog1
 		Dim As PrintPreviewDialog PrintPreviewDialog1
 		Dim As PageSetupDialog PageSetupDialog1
@@ -114,7 +128,7 @@
 			.Menu = @MainMenu1
 			.FormStyle = FormStyles.fsMDIForm
 			#ifdef __USE_GTK__
-				This.Icon.LoadFromFile(ExePath & "VisualFBEditor.ico")
+				This.Icon.LoadFromFile(ExePath & "MDINotepad.ico")
 			#else
 				This.Icon.LoadFromResourceID(1)
 			#endif
@@ -176,6 +190,9 @@
 			.Add "ToolBar", "ToolBar"
 			.Add "Undo", "Undo"
 			.Add "Vertical", "Vertical"
+			.Add "FileSearch", "FileSearch"
+			.Add "FileSync", "FileSync"
+			.Add "Hash", "Hash"
 			.Parent = @This
 		End With
 		' ImageList2
@@ -219,6 +236,9 @@
 			.Add "ToolBar", "ToolBar"
 			.Add "UndoD", "Undo"
 			.Add "VerticalD", "Vertical"
+			.Add "FileSearch", "FileSearch"
+			.Add "FileSync", "FileSync"
+			.Add "Hash", "Hash"
 			.Parent = @This
 		End With
 		' OpenFileDialog1
@@ -255,7 +275,7 @@
 		' PrintDialog1
 		With PrintDialog1
 			.Name = "PrintDialog1"
-			.SetBounds 20, 80, 16, 16
+			.SetBounds 60, 80, 16, 16
 			.Designer = @This
 			.Parent = @This
 		End With
@@ -269,7 +289,7 @@
 		' PageSetupDialog1
 		With PageSetupDialog1
 			.Name = "PageSetupDialog1"
-			.SetBounds 60, 80, 16, 16
+			.SetBounds 20, 80, 16, 16
 			.Designer = @This
 			.Parent = @This
 		End With
@@ -386,9 +406,9 @@
 			.Caption = "-"
 			.Parent = @mnuFile
 		End With
-		' mnuFilePrintSetup
-		With mnuFilePrintSetup
-			.Name = "mnuFilePrintSetup"
+		' mnuFilePageSetup
+		With mnuFilePageSetup
+			.Name = "mnuFilePageSetup"
 			.Designer = @This
 			.Caption = "Print Set&up..."
 			.OnClick = @_mnuFile_Click
@@ -728,7 +748,7 @@
 		With mnuEncodingUtf32BOM
 			.Name = "mnuEncodingUtf32BOM"
 			.Designer = @This
-			.Caption = "UTF-23 (BOM)"
+			.Caption = "UTF-32 (BOM)"
 			.OnClick = @_mnuEncoding_Click
 			.Parent = @mnuEncoding
 		End With
@@ -856,6 +876,41 @@
 			.Caption = "GB to BIG5"
 			.OnClick = @_mnuConvert_Click
 			.Parent = @mnuConvert
+		End With
+		' mnuTools
+		With mnuTools
+			.Name = "mnuTools"
+			.Caption = "Tools"
+			.Designer = @This
+			.Enabled = True
+			.Parent = @MainMenu1
+		End With
+		' mnuToolsFileSearch
+		With mnuToolsFileSearch
+			.Name = "mnuToolsFileSearch"
+			.Caption = "File Search"
+			.Designer = @This
+			.OnClick = @_mnuTools_Click
+			.ImageKey = "FileSearch"
+			.Parent = @mnuTools
+		End With
+		' mnuToolsFileSync
+		With mnuToolsFileSync
+			.Name = "mnuToolsFileSync"
+			.Caption = "File Sync"
+			.Designer = @This
+			.OnClick = @_mnuTools_Click
+			.ImageKey = "FileSync"
+			.Parent = @mnuTools
+		End With
+		' mnuToolsHash
+		With mnuToolsHash
+			.Name = "mnuToolsHash"
+			.Caption = "Hash"
+			.Designer = @This
+			.OnClick = @_mnuTools_Click
+			.ImageKey = "Hash"
+			.Parent = @mnuTools
 		End With
 		' mnuWindow
 		With mnuWindow
@@ -1102,6 +1157,38 @@
 			.Width = -1
 			.Parent = @ToolBar1
 		End With
+		' tbToolFileSearch
+		With tbToolFileSearch
+			.Name = "tbToolFileSearch"
+			.Designer = @This
+			.ImageKey = "FileSearch"
+			.Hint = "File Search"
+			.Parent = @ToolBar1
+		End With
+		' tbToolFileSync
+		With tbToolFileSync
+			.Name = "tbToolFileSync"
+			.Designer = @This
+			.ImageKey = "FileSync"
+			.Hint = "File Sync"
+			.Parent = @ToolBar1
+		End With
+		' tbToolHash
+		With tbToolHash
+			.Name = "tbToolHash"
+			.Designer = @This
+			.ImageKey = "Hash"
+			.Hint = "Hash"
+			.Parent = @ToolBar1
+		End With
+		' ToolButton5
+		With ToolButton5
+			.Name = "ToolButton5"
+			.Designer = @This
+			.Style = ToolButtonStyle.tbsSeparator
+			.Width = -1
+			.Parent = @ToolBar1
+		End With
 		' tbWindowHorizontal
 		With tbWindowHorizontal
 			.Name = "tbWindowHorizontal"
@@ -1156,7 +1243,13 @@
 			.Name = "spFileName"
 			.Designer = @This
 			.Width = 200
-			.Caption = ""
+			.Parent = @StatusBar1
+		End With
+		' spSpeed
+		With spSpeed
+			.Name = "spSpeed"
+			.Designer = @This
+			.Width = 100
 			.Parent = @StatusBar1
 		End With
 		' spSpace
@@ -1171,7 +1264,6 @@
 			.Name = "spLocation"
 			.Designer = @This
 			.Width = 200
-			.Caption = ""
 			.Parent = @StatusBar1
 		End With
 		' spEOL
@@ -1230,6 +1322,10 @@
 		*Cast(MDIMainType Ptr, Sender.Designer).mnuView_Click(Sender)
 	End Sub
 	
+	Private Sub MDIMainType._mnuTools_Click(ByRef Sender As MenuItem)
+		*Cast(MDIMainType Ptr, Sender.Designer).mnuTools_Click(Sender)
+	End Sub
+	
 	Private Sub MDIMainType._mnuWindow_Click(ByRef Sender As MenuItem)
 		*Cast(MDIMainType Ptr, Sender.Designer).mnuWindow_Click(Sender)
 	End Sub
@@ -1240,7 +1336,8 @@
 	
 	Dim Shared MDIMain As MDIMainType
 	
-	#if __MAIN_FILE__ = __FILE__
+	#if _MAIN_FILE_ = __FILE__
+		MDIMain.MainForm = True
 		MDIMain.Show
 		
 		App.Run
@@ -1252,6 +1349,9 @@
 #include once "frmGoto.frm"
 #include once "frmFindReplace.frm"
 #include once "frmCodePage.frm"
+#include once "frmFileSync.frm"
+#include once "frmFileSearch.frm"
+#include once "frmHash.frm"
 
 Private Sub MDIMainType.ToolBar1_ButtonClick(ByRef Sender As ToolBar, ByRef Button As ToolButton)
 	Select Case Button.Name
@@ -1291,6 +1391,13 @@ Private Sub MDIMainType.ToolBar1_ButtonClick(ByRef Sender As ToolBar, ByRef Butt
 	Case "tbViewDarkMode"
 		mnuView_Click(mnuViewDarkMode)
 		
+	Case "tbToolFileSearch"
+		mnuTools_Click(mnuToolsFileSearch)
+	Case "tbToolFileSync"
+		mnuTools_Click(mnuToolsFileSync)
+	Case "tbToolHash"
+		mnuTools_Click(mnuToolsHash)
+		
 	Case "tbWindowHorizontal"
 		mnuWindow_Click(mnuWindowTileHorizontal)
 	Case "tbWindowVertical"
@@ -1317,10 +1424,10 @@ Private Sub MDIMainType.mnuFile_Click(ByRef Sender As MenuItem)
 		a->Changed = False
 		a->Show(MDIMain)
 	Case "mnuFileSave"
-		a = lstMdiChild.Item(actMdiChildIdx)
+		a = actMdiChild
 		FileSave(a)
 	Case "mnuFileSaveAs"
-		a = lstMdiChild.Item(actMdiChildIdx)
+		a = actMdiChild
 		FileSaveAs(a)
 	Case "mnuFileSaveAll"
 		For i = 0 To lstMdiChild.Count - 1
@@ -1334,14 +1441,14 @@ Private Sub MDIMainType.mnuFile_Click(ByRef Sender As MenuItem)
 			Next
 		End If
 	Case "mnuFileBrowse"
-		a = lstMdiChild.Item(actMdiChildIdx)
-		Exec ("c:\windows\explorer.exe" , "/select," & *a->mFile)
-	Case "mnuFilePrintSetup"
-		'Todo : PageSetupDialog1.Execute
+		a = actMdiChild
+		Exec ("c:\windows\explorer.exe" , "/select," & a->File)
+	Case "mnuFilePageSetup"
+		'Todo: PageSetupDialog1.Execute
 	Case "mnuFilePrintPreview"
-		'Todo : PrintPreviewDialog1.Execute
+		'Todo: PrintPreviewDialog1.Execute
 	Case "mnuFilePrint"
-		'Todo : PrintDialog1.Execute
+		'Todo: PrintDialog1.Execute
 	Case "mnuFileExit"
 		ModalResult = ModalResults.OK
 		CloseForm
@@ -1363,7 +1470,7 @@ Private Function MDIMainType.FileSaveAs(Child As Any Ptr) As MessageResult
 			End If
 		End If
 		If msr = mrYes Then
-			a->SetFile(SaveFileDialog1.FileName)
+			a->File = SaveFileDialog1.FileName
 			FileSave(Child)
 		End If
 	Else
@@ -1376,11 +1483,13 @@ End Function
 Private Function MDIMainType.FileSave(Child As Any Ptr) As MessageResult
 	Dim msr As MessageResult = MessageResult.mrYes
 	Dim a As MDIChildType Ptr = Child
-	If *a->mFile= "" Then
+	If a->File= "" Then
 		msr = FileSaveAs(a)
 	Else
-		TextToFile(*a->mFile, a->TextBox1.Text, a->Encode, a->NewLine, a->CodePage)
+		timr.Start
+		TextToFile(a->File, a->TextBox1.Text, a->Encode, a->NewLine, a->CodePage)
 		a->Changed = False
+		spSpeed.Caption = "Save " & Format(timr.Passed, "#,#0.000") & " ms."
 	End If
 	If msr = MessageResult.mrCancel Then CloseResult = ModalResults.Cancel
 	Return msr
@@ -1410,14 +1519,16 @@ Private Sub MDIMainType.FileOpen(ByRef FileName As Const WString)
 				CodePage = Cast(Integer, frmCodePage.lstCodePage.ItemData(frmCodePage.lstCodePage.ItemIndex))
 			End If
 		End If
+		timr.Start
 		a = MDIChildNew()
 		a->Show(MDIMain)
 		a->TextBox1.Text = TextFromFile(FileName, Encode, NewLine, CodePage)
-		a->SetFile(FileName)
+		a->File = FileName
 		a->Encode = Encode
 		a->NewLine = NewLine
 		a->CodePage = CodePage
 		MDIChildActivate(a)
+		spSpeed.Caption = "Open " & Format(timr.Passed, "#,#0.000") & " ms."
 	Else
 		a = lstMdiChild.Item(i)
 		a->SetFocus()
@@ -1443,12 +1554,13 @@ Private Sub MDIMainType.FileInsert(ByRef FileName As Const WString, Child As Any
 			CodePage = Cast(Integer, frmCodePage.lstCodePage.ItemData(frmCodePage.lstCodePage.ItemIndex))
 		End If
 	End If
-	
+	timr.Start
 	MDIChildInsertText(Child, !"\r\nFile Insert Start Here: " & FileName & !"\r\n" & TextFromFile(FileName, Encode, NewLine, CodePage) & !"\r\nFile Insert End Here: " & FileName & !"!\r\n")
+	spSpeed.Caption = "Insert " & Format(timr.Passed, "#,#0.000") & " ms."
 End Sub
 
 Private Sub MDIMainType.mnuEdit_Click(ByRef Sender As MenuItem)
-	Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+	Dim a As MDIChildType Ptr = actMdiChild
 	Select Case Sender.Name
 		'Case "mnuEditRedo"
 	Case "mnuEditUndo"
@@ -1525,12 +1637,15 @@ Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
 		tbViewDarkMode.Checked = Sender.Checked
 		SetDarkMode(Sender.Checked, Sender.Checked)
 	Case "mnuViewWordWarps"
+		Dim a As MDIChildType Ptr = actMdiChild
+		Dim p As WString Ptr
+		WStr2Ptr(a->TextBox1.Text, p)
+		a->TextBox1.Text = ""
 		If Sender.Checked Then
 			Sender.Checked = False
 		Else
 			Sender.Checked = True
 		End If
-		Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
 		If Sender.Checked Then
 			a->TextBox1.WordWraps = True
 			a->TextBox1.ScrollBars = ScrollBarsType.Vertical
@@ -1538,8 +1653,10 @@ Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
 			a->TextBox1.WordWraps = False
 			a->TextBox1.ScrollBars = ScrollBarsType.Both
 		End If
+		a->TextBox1.Text = *p
+		If p Then Deallocate(p)
 	Case "mnuViewFont"
-		Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+		Dim a As MDIChildType Ptr = actMdiChild
 		FontDialog1.Font.Name = a->TextBox1.Font.Name
 		FontDialog1.Font.Size = a->TextBox1.Font.Size
 		FontDialog1.Font.Bold = a->TextBox1.Font.Bold
@@ -1559,13 +1676,13 @@ Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
 			a->TextBox1.Font.Color = FontDialog1.Font.Color
 		End If
 	Case "mnuViewBackColor"
-		Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+		Dim a As MDIChildType Ptr = actMdiChild
 		ColorDialog1.Color = a->TextBox1.BackColor
 		If ColorDialog1.Execute Then
 			a->TextBox1.BackColor=ColorDialog1.Color
 		End If
 	Case "mnuViewAllFont"
-		Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+		Dim a As MDIChildType Ptr = actMdiChild
 		FontDialog1.Font.Name = a->TextBox1.Font.Name
 		FontDialog1.Font.Size = a->TextBox1.Font.Size
 		FontDialog1.Font.Bold = a->TextBox1.Font.Bold
@@ -1588,7 +1705,7 @@ Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
 			Next
 		End If
 	Case "mnuViewAllBackColor"
-		Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+		Dim a As MDIChildType Ptr = actMdiChild
 		ColorDialog1.Color = a->TextBox1.BackColor
 		If ColorDialog1.Execute Then
 			For i = 0 To lstMdiChild.Count - 1
@@ -1605,8 +1722,7 @@ Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
 End Sub
 
 Private Sub MDIMainType.mnuEncoding_Click(ByRef Sender As MenuItem)
-	If actMdiChildIdx < 0 Then Exit Sub
-	Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+	Dim a As MDIChildType Ptr = actMdiChild
 	
 	Select Case Sender.Name
 	Case "mnuEncodingPlainText"
@@ -1644,7 +1760,7 @@ Private Sub MDIMainType.mnuEncoding_Click(ByRef Sender As MenuItem)
 End Sub
 
 Private Sub MDIMainType.mnuConvert_Click(ByRef Sender As MenuItem)
-	Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+	Dim a As MDIChildType Ptr = actMdiChild
 	Dim t As WString Ptr
 	
 	Dim s As LongInt = a->TextBox1.SelStart
@@ -1703,14 +1819,25 @@ Private Sub MDIMainType.mnuConvert_Click(ByRef Sender As MenuItem)
 	If c Then Deallocate(c)
 End Sub
 
+Private Sub MDIMainType.mnuTools_Click(ByRef Sender As MenuItem)
+	Select Case Sender.Name
+	Case "mnuToolsFileSearch"
+		frmFileSearch.Show(MDIMain)
+	Case "mnuToolsFileSync"
+		frmFileSync.Show(MDIMain)
+	Case "mnuToolsHash"
+		frmHash.Show(MDIMain)
+	End Select
+End Sub
+
 Private Sub MDIMainType.mnuWindow_Click(ByRef Sender As MenuItem)
 	Select Case Sender.Name
 	Case "mnuWindowClose"
-		Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+		Dim a As MDIChildType Ptr = actMdiChild
 		a->CloseForm
 	Case "mnuWindowCloseAll"
 		CloseResult = ModalResults.OK
-		Do While actMdiChildIdx > -1 And CloseResult = ModalResults.OK
+		Do While actMdiChild <> NULL And CloseResult = ModalResults.OK
 			mnuWindow_Click(mnuWindowClose)
 			App.DoEvents()
 		Loop
@@ -1738,7 +1865,7 @@ End Sub
 Private Sub MDIMainType.mnuHelp_Click(ByRef Sender As MenuItem)
 	Select Case Sender.Name
 	Case "mnuHelpAbout"
-		MsgBox(!"Visual FB Editor\r\n\r\nMDI Notepad\r\nBy Cm Wang", "MDI Notepad Example")
+		MsgBox(!"Visual FB Editor\r\n\r\nMDI Notepad Example\r\nBy Cm Wang", "MDI Notepad Example")
 	Case Else
 		MsgBox Sender.Name & !"\r\nThis function is under construction", "Edit"
 	End Select
@@ -1758,7 +1885,7 @@ Private Sub MDIMainType.Form_Close(ByRef Sender As Form, ByRef Action As Integer
 End Sub
 
 Private Sub MDIMainType.Form_Resize(ByRef Sender As Control, NewWidth As Integer, NewHeight As Integer)
-	spFileName.Width = NewWidth - (spEOL.width + spEncode.width + spLocation.width + spSpace.width)
+	spFileName.Width = NewWidth - (spEOL.Width + spEncode.Width + spLocation.Width + spSpace.Width + spSpeed.Width)
 End Sub
 
 Private Function MDIMainType.MDIChildFind(ByRef newName As Const WString) As Integer
@@ -1766,7 +1893,7 @@ Private Function MDIMainType.MDIChildFind(ByRef newName As Const WString) As Int
 	Dim a As MDIChildType Ptr
 	For i = 0 To lstMdiChild.Count - 1
 		a = lstMdiChild.Item(i)
-		If newName = *a->mFile Then
+		If newName = a->File Then
 			Return i
 		End If
 	Next
@@ -1781,7 +1908,7 @@ Private Sub MDIMainType.ControlEnabled(Enabled As Boolean)
 	mnuFileBar2.Enabled = Enabled
 	mnuFileBrowse.Enabled = Enabled
 	mnuFileBar3.Enabled = Enabled
-	mnuFilePrintSetup.Enabled = Enabled
+	mnuFilePageSetup.Enabled = Enabled
 	mnuFilePrintPreview.Enabled = Enabled
 	mnuFilePrint.Enabled = Enabled
 	mnuFileBar4.Enabled = Enabled
@@ -1843,17 +1970,13 @@ Private Sub MDIMainType.MDIChildDestroy(Child As Any Ptr)
 	lstMdiChild.Remove(lstMdiChild.IndexOf(Child))
 	
 	If lstMdiChild.Count > 0 Then Exit Sub
-	actMdiChildIdx = -1
+	actMdiChild = NULL
 	MDIChildMenuUpdate()
 End Sub
 
 Private Sub MDIMainType.MDIChildActivate(Child As Any Ptr)
-	actMdiChildIdx = lstMdiChild.IndexOf(Child)
+	actMdiChild = Child
 	MDIChildMenuUpdate()
-	Dim a As MDIChildType Ptr = Child
-	Dim FileInfo As SHFILEINFO
-	Dim h As Any Ptr = Cast(Any Ptr, SHGetFileInfo(*a->mFile, 0, @FileInfo, SizeOf(FileInfo), SHGFI_SYSICONINDEX))
-	SendMessage(a->Handle, WM_SETICON, 0, Cast(LPARAM, ImageList_GetIcon(h, FileInfo.iIcon, 0)))
 	MDIChildClick(Child)
 End Sub
 
@@ -1885,35 +2008,10 @@ Private Sub MDIMainType.MDIChildClick(Child As Any Ptr)
 	Dim As Integer sx, sy, ex, ey
 	Dim As Integer s, e
 	
-	Select Case a->Encode
-	Case FileEncodings.Utf8
-		spEncode.Caption = "UTF-8"
-	Case FileEncodings.Utf8BOM
-		spEncode.Caption = "UTF-8 (BOM)"
-	Case FileEncodings.Utf16BOM
-		spEncode.Caption = "UTF-16 (BOM)"
-	Case FileEncodings.Utf32BOM
-		spEncode.Caption = "UTF-32 (BOM)"
-	Case Else
-		spEncode.Caption = "Plain Text CP: " & IIf(a->CodePage< 0, GetACP(), a->CodePage)
-	End Select
-	
-	Select Case a->NewLine
-	Case NewLineTypes.LinuxLF
-		spEOL.Caption = "Unix (LF)"
-	Case NewLineTypes.MacOSCR
-		spEOL.Caption = "Macintosh (CR)"
-	Case Else
-		spEOL.Caption = "Windows (CR LF)"
-	End Select
-	
-	spFileName.Caption = a->Text
-	
 	a->TextBox1.GetSel(sy, sx, ey, ex)
 	a->TextBox1.GetSel(s, e)
 	
 	spSpace.Caption = "Length: " & Format(Len(a->TextBox1.Text), "#,#0") & "  Lines: " & Format(a->TextBox1.LinesCount, "#,#0")
-	
 	
 	If s = e Then
 		spLocation.Caption = "Ln: " & Format(sy + 1, "#,#0") & "  Col: " & Format(sx + 1, "#,#0") & "  Pos: " & Format(s + 1, "#,#0")
@@ -1926,7 +2024,6 @@ Private Sub MDIMainType.MDIChildClick(Child As Any Ptr)
 		End If
 	End If
 	
-	
 	If frmGoto.Handle Then
 		frmGoto.lblMsg.Text = "Line number (1 -" & a->TextBox1.LinesCount & ")"
 		frmGoto.txtLineNo.Text = "" & sy + 1
@@ -1935,29 +2032,52 @@ Private Sub MDIMainType.MDIChildClick(Child As Any Ptr)
 End Sub
 
 Private Sub MDIMainType.MDIChildMenuUpdate()
-	If actMdiChildIdx < 0 Then
-		spFileName.Caption = ""
-		spLocation.Caption = ""
-		spEncode.Caption = ""
-		spEOL.Caption = ""
-		ControlEnabled(False)
-	Else
-		Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
-		
+	Dim a As MDIChildType Ptr = actMdiChild
+	If a Then
+		a = actMdiChild
 		mnuViewWordWarps.Checked = a->TextBox1.WordWraps
-		
 		mnuEncodingPlainText.Caption = !"Plain Text\tCP: " & IIf(a->CodePage< 0, GetACP(), a->CodePage)
 		mnuEncodingPlainText.Checked = IIf(a->Encode = FileEncodings.PlainText, True, False)
 		mnuEncodingUtf8.Checked = IIf(a->Encode = FileEncodings.Utf8, True, False)
 		mnuEncodingUtf8BOM.Checked = IIf(a->Encode = FileEncodings.Utf8BOM, True, False)
 		mnuEncodingUtf16BOM.Checked = IIf(a->Encode = FileEncodings.Utf16BOM, True, False)
 		mnuEncodingUtf32BOM.Checked = IIf(a->Encode = FileEncodings.Utf32BOM, True, False)
-		
 		mnuEncodingCRLF.Checked = IIf(a->NewLine = NewLineTypes.WindowsCRLF, True, False)
 		mnuEncodingLF.Checked = IIf(a->NewLine = NewLineTypes.LinuxLF, True, False)
 		mnuEncodingCR.Checked = IIf(a->NewLine = NewLineTypes.MacOSCR, True, False)
 		
+		Select Case a->Encode
+		Case FileEncodings.Utf8
+			spEncode.Caption = "UTF-8"
+		Case FileEncodings.Utf8BOM
+			spEncode.Caption = "UTF-8 (BOM)"
+		Case FileEncodings.Utf16BOM
+			spEncode.Caption = "UTF-16 (BOM)"
+		Case FileEncodings.Utf32BOM
+			spEncode.Caption = "UTF-32 (BOM)"
+		Case Else
+			spEncode.Caption = "Plain Text CP: " & IIf(a->CodePage< 0, GetACP(), a->CodePage)
+		End Select
+		
+		Select Case a->NewLine
+		Case NewLineTypes.LinuxLF
+			spEOL.Caption = "Unix (LF)"
+		Case NewLineTypes.MacOSCR
+			spEOL.Caption = "Macintosh (CR)"
+		Case Else
+			spEOL.Caption = "Windows (CR LF)"
+		End Select
+		
+		spFileName.Caption = a->Text
 		ControlEnabled(True)
+	Else
+		spFileName.Caption = ""
+		spSpeed.Caption = ""
+		spSpace.Caption = ""
+		spLocation.Caption = ""
+		spEncode.Caption = ""
+		spEOL.Caption = ""
+		ControlEnabled(False)
 	End If
 	
 	Dim mMax As Integer = 5
@@ -2002,7 +2122,7 @@ Private Sub MDIMainType.MDIChildMenuUpdate()
 		mnuWindows(i)->Tag = lstMdiChild.Item(i - 1)
 		mnuWindows(i)->Caption = Cast(MDIChildType Ptr, lstMdiChild.Item(i - 1))->Text
 		mnuWindows(i)->OnClick = @_mnuWindow_Click
-		If (i - 1) = actMdiChildIdx Then mnuWindows(i)->Checked = True
+		If lstMdiChild.Item(i - 1) = actMdiChild Then mnuWindows(i)->Checked = True
 		mnuWindow.Add mnuWindows(i)
 	Next
 	
@@ -2017,12 +2137,13 @@ Private Sub MDIMainType.MDIChildMenuUpdate()
 	End If
 End Sub
 
-Private Sub MDIMainType.Find(ByRef FindStr As Const WString, ByVal FindCase As Boolean = False, ByVal FindWarp As Boolean = True, ByVal FindBack As Boolean = False)
-	Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+Private Sub MDIMainType.Find(ByRef FindStr As Const WString, ByVal MatchCase As Boolean = False, ByVal FindWarp As Boolean = True, ByVal FindBack As Boolean = False)
+	timr.Start
+	Dim a As MDIChildType Ptr = actMdiChild
 	Dim p As Integer
 	mFindBack = FindBack
 	If FindBack Then
-		If FindCase Then
+		If MatchCase Then
 			p = InWStrRev(a->TextBox1.Text, FindStr, a->TextBox1.SelStart)
 			If p = 0 And FindWarp Then
 				p = InWStrRev(a->TextBox1.Text, FindStr)
@@ -2038,7 +2159,7 @@ Private Sub MDIMainType.Find(ByRef FindStr As Const WString, ByVal FindCase As B
 			a->TextBox1.SelEnd = p + Len(FindStr) - 1
 		End If
 	Else
-		If FindCase Then
+		If MatchCase Then
 			p = InWStr(a->TextBox1.SelEnd + 1, a->TextBox1.Text, FindStr)
 			If p = 0 And FindWarp Then
 				p = InWStr(a->TextBox1.Text, FindStr)
@@ -2055,10 +2176,13 @@ Private Sub MDIMainType.Find(ByRef FindStr As Const WString, ByVal FindCase As B
 		End If
 	End If
 	MDIChildClick(a)
+	spSpeed.Caption = "Find " & Format(timr.Passed, "#,#0.000") & " ms."
 End Sub
 
-Private Sub MDIMainType.Replace(ByRef FindStr As Const WString, ByRef ReplaceStr As Const WString, ByVal FindCase As Boolean = False, ByVal FindWarp As Boolean = True)
-	Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+Private Sub MDIMainType.Replace(ByRef FindStr As Const WString, ByRef ReplaceStr As Const WString, ByVal MatchCase As Boolean = False, ByVal FindWarp As Boolean = True)
+	Dim t As TimeMeter
+	t.Start
+	Dim a As MDIChildType Ptr = actMdiChild
 	If a->TextBox1.SelText <> "" Then
 		a->TextBox1.SelText = "" + ReplaceStr
 		a->Changed = True
@@ -2069,14 +2193,16 @@ Private Sub MDIMainType.Replace(ByRef FindStr As Const WString, ByRef ReplaceStr
 	Else
 		a->TextBox1.SelStart = a->TextBox1.SelStart - 1
 	End If
-	Find(FindStr, FindCase, FindWarp, mFindBack)
+	Find(FindStr, MatchCase, FindWarp, mFindBack)
 	MDIChildClick(a)
+	spSpeed.Caption = "Replace " & Format(t.Passed, "#,#0.000") & " ms."
 End Sub
 
-Private Sub MDIMainType.ReplaceAll(ByRef FindStr As Const WString, ByRef ReplaceStr As Const WString, ByVal FindCase As Boolean = False)
-	Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+Private Sub MDIMainType.ReplaceAll(ByRef FindStr As Const WString, ByRef ReplaceStr As Const WString, ByVal MatchCase As Boolean = False)
+	timr.Start
+	Dim a As MDIChildType Ptr = actMdiChild
 	Dim p As Integer
-	If FindCase Then
+	If MatchCase Then
 		p = InWStr(a->TextBox1.Text, FindStr)
 	Else
 		p = InWStr(LCase(a->TextBox1.Text), LCase(FindStr))
@@ -2085,7 +2211,7 @@ Private Sub MDIMainType.ReplaceAll(ByRef FindStr As Const WString, ByRef Replace
 		Dim s As Integer = a->TextBox1.SelStart
 		
 		Dim t As WString Ptr = 0
-		Dim i As Integer = ReplaceWStr (a->TextBox1.Text, FindStr, ReplaceStr, t, FindCase)
+		Dim i As Integer = ReplaceWStr (a->TextBox1.Text, FindStr, ReplaceStr, t, MatchCase)
 		If i Then
 			a->TextBox1.Text = *t
 			a->Changed = True
@@ -2095,10 +2221,12 @@ Private Sub MDIMainType.ReplaceAll(ByRef FindStr As Const WString, ByRef Replace
 		a->TextBox1.SelStart = s
 	End If
 	MDIChildClick(a)
+	spSpeed.Caption = "ReplaceAll " & Format(timr.Passed, "#,#0.000") & " ms."
 End Sub
 
 Private Sub MDIMainType.GotoLineNo(ByVal LineNumber As Integer)
-	Dim a As MDIChildType Ptr = lstMdiChild.Item(actMdiChildIdx)
+	timr.Start
+	Dim a As MDIChildType Ptr = actMdiChild
 	
 	If a->TextBox1.LinesCount < LineNumber Then Exit Sub
 	Dim l As Integer = 1
@@ -2113,5 +2241,5 @@ Private Sub MDIMainType.GotoLineNo(ByVal LineNumber As Integer)
 	a->TextBox1.SelStart = l - 1
 	a->TextBox1.SelEnd = l - 1
 	MDIChildClick(a)
+	spSpeed.Caption = "Goto " & Format(timr.Passed, "#,#0.000") & " ms."
 End Sub
-
