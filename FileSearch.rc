@@ -4,8 +4,8 @@
 #define APP_TITLE_STR               "FileSearch\0"
 #define VER_FILEDESCRIPTION_STR     "FileSearch\0"
 
-#define VER_FILEVERSION             0,0,0,1249
-#define VER_FILEVERSION_STR         "0.0.0.1249\0"
+#define VER_FILEVERSION             1,0,0,6
+#define VER_FILEVERSION_STR         "1.0.0.6\0"
 
 #define VER_LEGALCOPYRIGHT_STR      "Cm.Wang\0"
 
