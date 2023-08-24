@@ -1,10 +1,10 @@
 ﻿'#Region "Form"
 	#if defined(__FB_MAIN__) AndAlso Not defined(__MAIN_FILE__)
 		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
 		#ifdef __FB_WIN32__
 			#cmdline "Hash.rc"
 		#endif
+		Const _MAIN_FILE_ = __FILE__
 	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Panel.bi"
@@ -25,14 +25,10 @@
 		Dim timr As TimeMeter
 		Declare Sub HashFile()
 		Declare Sub HashText()
-		
-		Declare Static Sub _cmdFile_Click(ByRef Sender As Control)
+	
 		Declare Sub cmdFile_Click(ByRef Sender As Control)
-		Declare Static Sub _cmdHash_Click(ByRef Sender As Control)
 		Declare Sub cmdHash_Click(ByRef Sender As Control)
-		Declare Static Sub _lvFiles_DropFile(ByRef Sender As Control, ByRef FileName As WString)
 		Declare Sub lvFiles_DropFile(ByRef Sender As Control, ByRef FileName As WString)
-		Declare Static Sub _Form_Create(ByRef Sender As Control)
 		Declare Sub Form_Create(ByRef Sender As Control)
 		Declare Constructor
 		
@@ -72,7 +68,7 @@
 			.BorderStyle = FormBorderStyle.Sizable
 			.MaximizeBox = True
 			.MinimizeBox = False
-			.OnCreate = @_Form_Create
+			.OnCreate = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @Form_Create)
 			.SetBounds 0, 0, 640, 480
 		End With
 		' TabControl1
@@ -127,7 +123,7 @@
 			.Caption = "Add"
 			.SetBounds 10, 10, 100, 20
 			.Designer = @This
-			.OnClick = @_cmdFile_Click
+			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdFile_Click)
 			.Parent = @Panel1
 		End With
 		' cmdFileDelete
@@ -138,7 +134,7 @@
 			.Caption = "Delete"
 			.SetBounds 120, 10, 100, 20
 			.Designer = @This
-			.OnClick = @_cmdFile_Click
+			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdFile_Click)
 			.Parent = @Panel1
 		End With
 		' cmdFileClear
@@ -149,7 +145,7 @@
 			.Caption = "Clear"
 			.SetBounds 230, 10, 100, 20
 			.Designer = @This
-			.OnClick = @_cmdFile_Click
+			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdFile_Click)
 			.Parent = @Panel1
 		End With
 		' lvFiles
@@ -164,7 +160,7 @@
 			.SmallImages = @ImageList1
 			.SetBounds 0, 40, 602, 126
 			.Designer = @This
-			.OnDropFile = @_lvFiles_DropFile
+			.OnDropFile = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control, ByRef Filename As WString), @lvFiles_DropFile)
 			.Parent = @tabFile
 			.Columns.Add("Filename",,570)
 		End With
@@ -329,7 +325,7 @@
 				.Caption = "Insert"
 				.SetBounds 10, 10, 100, 20
 				.Designer = @This
-				.OnClick = @_cmdHash_Click
+				.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdHash_Click)
 				.Parent = @Panel6
 			End With
 		#endif
@@ -341,7 +337,7 @@
 			.Caption = "Clear"
 			.SetBounds 120, 10, 100, 20
 			.Designer = @This
-			.OnClick = @_cmdHash_Click
+			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdHash_Click)
 			.Parent = @Panel6
 		End With
 		' cmdHashAct
@@ -352,7 +348,7 @@
 			.Caption = "Hash"
 			.SetBounds 230, 10, 100, 20
 			.Designer = @This
-			.OnClick = @_cmdHash_Click
+			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdHash_Click)
 			.Parent = @Panel6
 		End With
 		' ImageList1
@@ -371,22 +367,6 @@
 			.Parent = @Panel1
 		End With
 	End Constructor
-	
-	Private Sub frmHashType._Form_Create(ByRef Sender As Control)
-		*Cast(frmHashType Ptr, Sender.Designer).Form_Create(Sender)
-	End Sub
-	
-	Private Sub frmHashType._lvFiles_DropFile(ByRef Sender As Control, ByRef Filename As WString)
-		*Cast(frmHashType Ptr, Sender.Designer).lvFiles_DropFile(Sender, Filename)
-	End Sub
-	
-	Private Sub frmHashType._cmdHash_Click(ByRef Sender As Control)
-		*Cast(frmHashType Ptr, Sender.Designer).cmdHash_Click(Sender)
-	End Sub
-	
-	Private Sub frmHashType._cmdFile_Click(ByRef Sender As Control)
-		*Cast(frmHashType Ptr, Sender.Designer).cmdFile_Click(Sender)
-	End Sub
 	
 	Dim Shared frmHash As frmHashType
 	
@@ -438,8 +418,8 @@ Private Sub frmHashType.cmdHash_Click(ByRef Sender As Control)
 		txtHash.Clear
 	Case "cmdHashInsert"
 		#ifdef __MDI__
-			If MDIMain.ActMdiChild Then
-				MDIMain.MDIChildInsertText(MDIMain.ActMdiChild, txtHash.Text)
+			If MDIMain.actMdiChild Then
+				MDIMain.MDIChildInsertText(MDIMain.actMdiChild, txtHash.Text)
 			End If
 		#endif
 	End Select
@@ -460,7 +440,7 @@ Private Sub frmHashType.HashFile()
 	Dim i As Integer
 	Dim j As Integer
 	Dim k As Integer
-	Dim s As Integer
+	Dim s As UInteger
 	Dim chk(5) As BOOL
 	Dim chkc As Long = 0
 	
@@ -472,8 +452,9 @@ Private Sub frmHashType.HashFile()
 	chk(5) = chkHash6.Checked
 	
 	j = lvFiles.ListItems.Count - 1
+	If j < 0 Then Exit Sub
 	ReDim a(j) As WString Ptr 'for filename
-	ReDim b(j) As WString Ptr
+	ReDim b(j + 1) As WString Ptr
 	For i = 0 To j
 		WStr2Ptr(lvFiles.ListItems.Item(i)->Text(0), a(i))
 	Next
@@ -483,38 +464,45 @@ Private Sub frmHashType.HashFile()
 	Next
 	ReDim d(chkc + 1)
 	
-	Dim ta As Double= 0
+	Dim ta As Double
 	Dim ts As Double
+	Dim te As Double
+	
+	ta = timr.Passed
+	ts = ta
 	For i = 0 To j
 		k = 0
 		If PathFileExists(a(i)) Then
 			s = GetFileData(*a(i), m)
-			ts = timr.Passed
-			WStr2Ptr(*a(i) & "; Size=" & Format(s, "#,#0") & "; Take=" & Format(ts - ta, "#,#0.000") & " ms.", d(k))
-			ta = ts
+			te = timr.Passed
+			WStr2Ptr(*a(i) & "; Size=" & Format(s, "#,#0") & "; Take=" & Format(te - ts, "#,#0.000") & " sec.", d(k))
+			ts = te
 			Dim l As Long
 			For l = 0 To 5
 				If chk(l) Then
 					k += 1
 					WStr2Ptr(GetHash(m, s, l), c)
-					ts = timr.Passed
-					WStr2Ptr(AlgWStr(l) & "=" & *c & "; ; Take=" & Format(ts - ta, "#,#0.000") & " ms.", d(k))
-					ta = ts
+					te = timr.Passed
+					WStr2Ptr(AlgWStr(l) & "=" & *c & "; ; Take=" & Format(te - ts, "#,#0.000") & " sec.", d(k))
+					ts = te
 				End If
 			Next
 			JoinWStr(d(), vbCrLf, b(i))
 		End If
 		App.DoEvents()
 	Next i
-	If m Then Deallocate(m)
+
+	WStr2Ptr("Total Take=" & Format(te - ta, "#,#0.000") & " sec.", b(j + 1))
 	JoinWStr(b(), vbCrLf, c)
 	i = txtHash.SelStart
 	txtHash.SelText = *c
 	txtHash.SelStart = i
 	txtHash.SelLength = Len(*c)
+	
 	ArrayDeallocate(b())
 	ArrayDeallocate(a())
 	ArrayDeallocate(d())
+	If m Then Deallocate(m)
 	If c Then Deallocate(c)
 End Sub
 
@@ -545,41 +533,48 @@ Private Sub frmHashType.HashText()
 		ReDim a(j)
 		WStr2Ptr(txtText.Text, a(0))
 	End If
-	ReDim b(j)
+	ReDim b(j + 1)
 	
 	For i = 0 To 5
 		If chk(i) Then chkc += 1
 	Next
 	ReDim d(chkc + 1)
 	
-	Dim ta As Double= 0
+	Dim ta As Double
 	Dim ts As Double
+	Dim te As Double
+
+	ta = timr.Passed
+	ts = ta
 	For i = 0 To j
 		k = 0
 		Dim tmp As String = TextUnicode2Ansi(*a(i))
 		m = StrPtr(tmp)
 		s = Len(tmp)
-		ts = timr.Passed
-		WStr2Ptr(*a(i) & "; Size=" & Format(s, "#,#0") & "; Take=" & Format(ts - ta, "#,#0.000") & " ms.", d(k))
-		ta = ts
+		te = timr.Passed
+		WStr2Ptr(*a(i) & "; Size=" & Format(s, "#,#0") & "; Take=" & Format(te - ts, "#,#0.000") & " sec.", d(k))
+		ts = te
 		Dim l As Long
 		For l = 0 To 5
 			If chk(l) Then
 				k += 1
 				WStr2Ptr(GetHash(m, s, l), c)
-				ts = timr.Passed
-				WStr2Ptr(AlgWStr(l) & "=" & *c & "; ; Take=" & Format(ts - ta, "#,#0.000") & " ms.", d(k))
-				ta = ts
+				te = timr.Passed
+				WStr2Ptr(AlgWStr(l) & "=" & *c & "; ; Take=" & Format(te - ts, "#,#0.000") & " sec.", d(k))
+				ts = te
 			End If
 		Next
 		JoinWStr(d(), vbCrLf, b(i))
 		App.DoEvents()
 	Next i
+
+	WStr2Ptr("Total Take=" & Format(te - ta, "#,#0.000") & " sec.", b(j + 1))
 	JoinWStr(b(), vbCrLf, c)
 	i = txtHash.SelStart
 	txtHash.SelText = *c
 	txtHash.SelStart = i
 	txtHash.SelLength = Len(*c)
+
 	ArrayDeallocate(b())
 	ArrayDeallocate(a())
 	ArrayDeallocate(d())
