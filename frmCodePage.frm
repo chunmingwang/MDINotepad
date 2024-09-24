@@ -487,7 +487,7 @@
 			.Text = "ListControl1"
 			.TabIndex = 6
 			.Align = DockStyle.alClient
-			Dim i As Integer
+			Dim As Integer i
 			For i = 0 To CodePageCount
 				.AddItem(CodePageStr(i), Cast(Any Ptr, CodePageNum(i)))
 			Next
@@ -587,7 +587,7 @@ Private Sub frmCodePageType.lstCodePage_Click(ByRef Sender As Control)
 End Sub
 
 Private Sub frmCodePageType.cobEncod_Selected(ByRef Sender As ComboBoxEdit, ItemIndex As Integer)
-	Dim b As Boolean = IIf(cobEncod.ItemIndex = 0, True, False)
+	Dim As Boolean b = IIf(cobEncod.ItemIndex = 0, True, False)
 	
 	chkSystemCP.Enabled = b
 	If b Then
@@ -649,9 +649,9 @@ Private Sub frmCodePageType.chkPreview_Click(ByRef Sender As CheckBox)
 		End If
 	End If
 	
-	Dim NewLine As NewLineTypes = -1
-	Dim Encode As FileEncodings = cobEncod.ItemIndex
-	Dim p As WString Ptr
+	Dim As NewLineTypes NewLine = -1
+	Dim As FileEncodings Encode = cobEncod.ItemIndex
+	Dim As WString Ptr p
 	TextFromFile(spFileName.Caption, p, Encode, NewLine, CodePage, CLng(txtPreviewSize.Text))
 	txtPreview.Text = *p
 	If p Then Deallocate(p)
@@ -661,7 +661,7 @@ Private Sub frmCodePageType.SetCodePage(CP As Integer)
 	CodePage = IIf(CP < 0, GetACP(), CP)
 	spCodePage.Caption = "Select Code Page: " & CodePage
 	Caption = spCodePage.Caption
-	Dim i As Integer
+	Dim As Integer i
 	For i = 0 To lstCodePage.ItemCount - 1
 		If lstCodePage.ItemData(i) = CodePage Then
 			lstCodePage.ItemIndex = i
@@ -681,8 +681,8 @@ Private Sub frmCodePageType.Form_Resize(ByRef Sender As Control, NewWidth As Int
 End Sub
 
 Private Function SelectCodePage(ByRef sFileName As WString, ByRef sEncode As FileEncodings = -1, ByRef sCodePage As NewLineTypes = -1, ByVal sShowMode As Integer = 0) As Boolean
-	Dim rtn As Boolean
-	Dim frmCodePage As frmCodePageType Ptr
+	Dim As Boolean rtn
+	Dim As frmCodePageType Ptr frmCodePage
 	If frmCodePage = NULL Then frmCodePage = New frmCodePageType
 	frmCodePage->ShowMode = sShowMode
 	frmCodePage->cobEncod.ItemIndex = 0

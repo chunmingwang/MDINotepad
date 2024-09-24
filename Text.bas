@@ -253,8 +253,10 @@ End Function
 
 '快排（Quick Sort）
 Sub QuickSort(arr() As WString Ptr, ByVal low As Integer, ByVal high As Integer, ByVal Ascending As Boolean)
-	Dim As Integer i = low, j = high
-	Dim As WString Ptr pivot = arr((low + high) \ 2), temp
+	Dim i As Integer = low
+	Dim j As Integer = high
+	Dim pivot As WString Ptr = arr((low + high) \ 2)
+	Dim temp As WString Ptr
 	
 	' 快排核心：根据 pivot 分区
 	Do
@@ -460,7 +462,7 @@ End Function
 'Ansi编码文字pAnsi用指定nCodePage转换为文本pToText
 Private Function TextFromAnsi(ByRef pAnsi As Const String, ByRef pToText As WString Ptr, ByVal nCodePage As Integer = -1) As Long
 	Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-	Dim As LongInt nLength = MultiByteToWideChar(CodePage, 0, StrPtr(pAnsi), -1, NULL, 0) - 1
+	Dim nLength As LongInt = MultiByteToWideChar(CodePage, 0, StrPtr(pAnsi), -1, NULL, 0) - 1
 	If pToText Then Deallocate(pToText)
 	pToText = CAllocate(nLength * 2 + 2)
 	Return MultiByteToWideChar(CodePage, 0, StrPtr(pAnsi), -1, pToText, nLength)
@@ -469,7 +471,7 @@ End Function
 '文本pText用指定nCodePage转换为Ansi编码到pToAnsi
 Private Function TextToAnsi(ByRef pText As Const WString, ByRef pToAnsi As ZString Ptr, ByVal nCodePage As Integer = -1) As Long
 	Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-	Dim As LongInt nLength = WideCharToMultiByte(CodePage, 0, StrPtr(pText), -1, NULL, 0, NULL, NULL) - 1
+	Dim nLength As LongInt = WideCharToMultiByte(CodePage, 0, StrPtr(pText), -1, NULL, 0, NULL, NULL) - 1
 	If pToAnsi Then Deallocate(pToAnsi)
 	pToAnsi = CAllocate(nLength * 2 + 2)
 	Return WideCharToMultiByte(CodePage, 0, StrPtr(pText), nLength, pToAnsi, nLength, NULL, NULL)
@@ -488,45 +490,11 @@ End Function
 '文本pSource指定转换码CnvCode转换为pConverted
 Private Function TextConvert(ByRef pSource As Const WString, ByRef pConverted As WString Ptr, ByVal CnvCode As DWORD) As Long
 	Dim lid As LCID = MAKELCID(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED), SORT_CHINESE_PRC)
-	Dim As LongInt nLength = LCMapString(lid, CnvCode, StrPtr(pSource), -1, NULL, 0)
+	Dim nLength As LongInt = LCMapString(lid, CnvCode, StrPtr(pSource), -1, NULL, 0)
 	If pConverted Then Deallocate(pConverted)
 	pConverted = CAllocate(Len(pSource) * 2 + 2)
 	LCMapString(lid, CnvCode, StrPtr(pSource), -1, pConverted, nLength)
 	Return nLength
-End Function
-
-'获取文本文件FileName的文件编码FileEncoding, 并且返回文件的大小
-Private Function TextFileGetEncode(ByRef FileName As Const WString, ByRef FileEncoding As FileEncodings = FileEncodings.Utf8BOM) As LongInt
-	Dim As String Buff
-	Dim As Integer Result = -1, Fn = FreeFile
-	Dim As LongInt FileSize = 0, tmp = 1024
-	
-	Result = Open(FileName For Binary Access Read As #Fn)
-	
-	If Result = 0 Then
-		FileSize = LOF(Fn)
-		tmp = IIf(tmp < FileSize, FileSize, tmp)
-		Buff = String(tmp, 0)
-		Get #Fn, , Buff
-		Close(Fn)
-		
-		If FileEncoding < 0 Then
-			If Buff[0] = &HFF AndAlso Buff[1] = &HFE AndAlso Buff[2] = 0 AndAlso Buff[3] = 0 Then 'Utf32BOM
-				FileEncoding = FileEncodings.Utf32BOM
-			ElseIf Buff[0] = &HFF AndAlso Buff[1] = &HFE Then 'Utf16BOM
-				FileEncoding = FileEncodings.Utf16BOM
-			ElseIf Buff[0] = &HEF AndAlso Buff[1] = &HBB AndAlso Buff[2] = &HBF Then 'Utf8BOM
-				FileEncoding = FileEncodings.Utf8BOM
-			Else
-				If (CheckUTF8NoBOM(Buff)) Then 'UTF8
-					FileEncoding = FileEncodings.Utf8
-				Else 'PlainText
-					FileEncoding = FileEncodings.PlainText
-				End If
-			End If
-		End If
-	End If
-	Return FileSize
 End Function
 
 '返回换行SrcEOL编码对应的字符串
@@ -559,67 +527,125 @@ Private Function TextGetEncodeStr(FileEncoding As FileEncodings = FileEncodings.
 	End Select
 End Function
 
-'从件FileName中读取文本pText, 用指定的编码格式FileEncoding和换行符NewLineType
-Private Function TextFromFile(ByRef FileName As Const WString, ByRef pText As WString Ptr, ByRef FileEncoding As FileEncodings = FileEncodings.Utf8BOM, ByRef NewLineType As NewLineTypes = OsEol, ByRef nCodePage As Integer = -1, ByVal LoadSize As Integer = 0) As LongInt
-	Dim As Integer TempSize = TextFileGetEncode(FileName, FileEncoding)
-	If TempSize = 0 Then Return 0
+'获取文本文件FileName的文件编码格式FileEncoding和换行格式NewLineType, 并且返回文件的大小
+Private Function TextFileGetFormat(ByRef FileName As Const WString, ByRef FileEncoding As FileEncodings = -1, ByRef NewLineType As NewLineTypes = -1, ByVal LoadSize As Integer = &Hfffff) As LongInt
+	Dim Buff As String
+	Dim Result As LongInt = -1
+	Dim Fn As Integer = FreeFile
+	Dim FileSize As LongInt = 0
+	Dim TempSize As LongInt = 0
 	
-	Dim As Integer FileSize
-	FileSize= IIf(LoadSize > 0, IIf(LoadSize < TempSize, LoadSize, TempSize), TempSize)
-	If pText Then Deallocate(pText)
-	pText = CAllocate(FileSize * SizeOf(WString) + SizeOf(WString))
-	Dim As Integer Result
-	Dim As Integer Fn = FreeFile
-	If FileEncoding < FileEncodings.Utf8BOM Then
-		Result = Open(FileName For Binary Access Read As #Fn)
-		If Result = 0 Then
-			Dim As String Buff = String(FileSize, 0)
-			Get #Fn, 0, Buff
-			Close(Fn)
-			If FileEncoding = FileEncodings.PlainText Then
-				Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-				TextFromAnsi(Buff, pText, CodePage)
+	Result = Open(FileName For Binary Access Read As #Fn)
+	If Result = 0 Then
+		FileSize = LOF(Fn)
+		TempSize = IIf(LoadSize > 0, IIf(LoadSize > FileSize, FileSize, LoadSize), FileSize)
+		Buff = String(TempSize, 0)
+		Get #Fn, , Buff
+		Close(Fn)
+		
+		If FileEncoding < 0 Then
+			If Buff[0] = &HFF AndAlso Buff[1] = &HFE AndAlso Buff[2] = 0 AndAlso Buff[3] = 0 Then 'Utf32BOM
+				FileEncoding = FileEncodings.Utf32BOM
+			ElseIf Buff[0] = &HFF AndAlso Buff[1] = &HFE Then 'Utf16BOM
+				FileEncoding = FileEncodings.Utf16BOM
+			ElseIf Buff[0] = &HEF AndAlso Buff[1] = &HBB AndAlso Buff[2] = &HBF Then 'Utf8BOM
+				FileEncoding = FileEncodings.Utf8BOM
 			Else
-				TextFromAnsi(Buff, pText, CodePage_UTF8)
-				'UTFToWChar(UTF_ENCOD_UTF8, StrPtr(Buff), pText, @FileSize)
+				Dim Buff2 As String
+				Result = Open(FileName For Binary Access Read As #Fn)
+				Buff2 = String(FileSize, 0)
+				Get #Fn, , Buff2
+				Close(Fn)
+				If (CheckUTF8NoBOM(Buff2)) Then 'UTF8
+					FileEncoding = FileEncodings.Utf8
+				Else 'PlainText
+					FileEncoding = FileEncodings.PlainText
+				End If
 			End If
 		End If
-	Else
-		Result = Open(FileName For Input Encoding TextGetEncodeStr(FileEncoding) As #Fn)
-		If Result = 0 Then
-			*pText =  WInput(FileSize, #Fn)
-			Close(Fn)
+		
+		If NewLineType < 0 Then
+			Dim pText As WString Ptr
+			If FileEncoding < FileEncodings.Utf8BOM Then
+				If FileEncoding = FileEncodings.PlainText Then
+					TextFromAnsi(Buff, pText, GetACP())
+				Else
+					TextFromAnsi(Buff, pText, CodePage_UTF8)
+				End If
+			Else
+				Result = Open(FileName For Input Encoding TextGetEncodeStr(FileEncoding) As #Fn)
+				If Result = 0 Then
+					pText = CAllocate(TempSize* SizeOf(WString) + SizeOf(WString))
+					*pText =  WInput(TempSize, #Fn)
+					Close(Fn)
+				End If
+			End If
+			If InWStr(*pText, WChr(13, 10)) Then
+				NewLineType = NewLineTypes.WindowsCRLF
+			ElseIf InWStr(*pText, WChr(10)) Then
+				NewLineType = NewLineTypes.LinuxLF
+			ElseIf InWStr(*pText, WChr(13)) Then
+				NewLineType = NewLineTypes.MacOSCR
+			Else
+				NewLineType = OsEol
+			End If
+			If pText Then Deallocate(pText)
 		End If
-	End If
-	
-	If NewLineType<0 Then
-		If InStr(*pText, WChr(13, 10)) Then
-			NewLineType = NewLineTypes.WindowsCRLF
-		ElseIf InStr(*pText, WChr(10)) Then
-			NewLineType = NewLineTypes.LinuxLF
-		ElseIf InStr(*pText, WChr(13)) Then
-			NewLineType = NewLineTypes.MacOSCR
-		Else
-			NewLineType = OsEol
-		End If
-	End If
-	
-	If NewLineType<>OsEol Then
-		WLet(pText, Replace(*pText, TextGetEofStr(NewLineType), TextGetEofStr(OsEol)))
 	End If
 	
 	Return FileSize
 End Function
 
+'从件FileName中读取文本pText, 用指定的编码格式FileEncoding和换行格式NewLineType
+Private Function TextFromFile(ByRef FileName As Const WString, ByRef pText As WString Ptr, ByRef FileEncoding As FileEncodings = FileEncodings.Utf8BOM, ByRef NewLineType As NewLineTypes = OsEol, ByRef nCodePage As Integer = -1, ByVal LoadSize As Integer = 0) As LongInt
+	Dim FileSize As LongInt = TextFileGetFormat(FileName, FileEncoding, NewLineType)
+	If FileSize = 0 Then Return 0
+	
+	Dim TempSize As Integer = IIf(LoadSize > 0, IIf(LoadSize > FileSize, FileSize, LoadSize), FileSize)
+	Dim Result As Integer
+	Dim Fn As Integer = FreeFile
+	If FileEncoding < FileEncodings.Utf8BOM Then
+		Result = Open(FileName For Binary Access Read As #Fn)
+		If Result = 0 Then
+			Dim Buff As String = String(TempSize, 0)
+			Get #Fn, , Buff
+			Close(Fn)
+			Select Case FileEncoding
+			Case FileEncodings.Utf8
+				TextFromAnsi(Buff, pText, CodePage_UTF8)
+			Case FileEncodings.PlainText
+				TextFromAnsi(Buff, pText, IIf(nCodePage= -1, GetACP(), nCodePage))
+			End Select
+		End If
+	Else
+		Result = Open(FileName For Input Encoding TextGetEncodeStr(FileEncoding) As #Fn)
+		If Result = 0 Then
+			If pText Then Deallocate(pText)
+			pText = CAllocate(TempSize* SizeOf(WString) + SizeOf(WString))
+			*pText =  WInput(TempSize, #Fn)
+			Close(Fn)
+		End If
+	End If
+	
+	If NewLineType<>OsEol Then
+		Dim tmp As WString Ptr
+		WLet(tmp, *pText)
+		ReplaceWStr(*tmp, TextGetEofStr(NewLineType), TextGetEofStr(OsEol), pText)
+		Deallocate(tmp)
+	End If
+	
+	Return TempSize
+End Function
+
 '保存文本fSource到文件FileName, 用指定的编码格式FileEncoding,换行符NewLineType
 Private Function TextToFile(ByRef FileName As Const WString, pText As WString, ByVal FileEncoding As FileEncodings = FileEncodings.Utf8BOM, ByVal NewLineType As NewLineTypes = OsEol, ByVal nCodePage As Integer = -1) As Boolean
-	Dim As Integer Fn = FreeFile
-	Dim As Integer Result
-	Dim As LongInt FileSize = Len(pText)
+	Dim Fn As Integer = FreeFile
+	Dim Result As Integer
+	Dim FileSize As Integer = Len(pText)
 	
 	If FileSize= 0 Then Return False
 	
-	Dim As WString Ptr pTmp
+	Dim pTmp As WString Ptr
 	If NewLineType <> OsEol Then
 		WLet(pTmp, Replace(pText, TextGetEofStr(OsEol), TextGetEofStr(NewLineType)))
 		FileSize = Len(*pTmp)
@@ -632,12 +658,8 @@ Private Function TextToFile(ByRef FileName As Const WString, pText As WString, B
 		If Result = 0 Then
 			Dim pData As ZString Ptr
 			If FileEncoding = FileEncodings.PlainText Then
-				Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-				TextToAnsi(*pTmp, pData, CodePage)
+				TextToAnsi(*pTmp, pData, IIf(nCodePage= -1, GetACP(), nCodePage))
 			Else
-				'Dim dSize As Integer
-				''pData = WCharToUTF(UTF_ENCOD_UTF8, pTmp, FileSize, 0, @dSize)
-				'WCharToUTF(UTF_ENCOD_UTF8, pTmp, FileSize, pData, @dSize)
 				TextToAnsi(*pTmp, pData, CodePage_UTF8)
 			End If
 			Put #Fn, 0, *pData

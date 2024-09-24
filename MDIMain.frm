@@ -1350,7 +1350,7 @@
 		With pmEncodingPT
 			.Name = "pmEncodingPT"
 			.Designer = @This
-			.Caption = "Plain Text"
+			.Caption = mnuEncodingPlainText.Caption
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As MenuItem), @mnuEncoding_Click)
 			.Parent = @pmEncode
 		End With
@@ -1358,7 +1358,7 @@
 		With pmEncodingUTF8
 			.Name = "pmEncodingUTF8"
 			.Designer = @This
-			.Caption = "UTF-8"
+			.Caption = mnuEncodingUtf8.Caption
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As MenuItem), @mnuEncoding_Click)
 			.Parent = @pmEncode
 		End With
@@ -1366,7 +1366,7 @@
 		With pmEncodingUTF8BOM
 			.Name = "pmEncodingUTF8BOM"
 			.Designer = @This
-			.Caption = "UTF-8 (BOM)"
+			.Caption = mnuEncodingUtf8BOM.Caption 
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As MenuItem), @mnuEncoding_Click)
 			.Parent = @pmEncode
 		End With
@@ -1374,7 +1374,7 @@
 		With pmEncodingUTF16BOM
 			.Name = "pmEncodingUTF16BOM"
 			.Designer = @This
-			.Caption = "UTF-16 (BOM)"
+			.Caption = mnuEncodingUtf16BOM.Caption 
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As MenuItem), @mnuEncoding_Click)
 			.Parent = @pmEncode
 		End With
@@ -1382,7 +1382,7 @@
 		With pmEncodingUTF32BOM
 			.Name = "pmEncodingUTF32BOM"
 			.Designer = @This
-			.Caption = "UTF-32 (BOM)"
+			.Caption = mnuEncodingUtf32BOM.Caption
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As MenuItem), @mnuEncoding_Click)
 			.Parent = @pmEncode
 		End With
@@ -1390,7 +1390,7 @@
 		With pmEOLCRLF
 			.Name = "pmEOLCRLF"
 			.Designer = @This
-			.Caption = "Windows CRLF"
+			.Caption = mnuEOLCRLF.Caption 
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As MenuItem), @mnuEncoding_Click)
 			.Parent = @pmEOL
 		End With
@@ -1398,7 +1398,7 @@
 		With pmEOLLF
 			.Name = "pmEOLLF"
 			.Designer = @This
-			.Caption = "Linux LF"
+			.Caption = mnuEOLLF.Caption 
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As MenuItem), @mnuEncoding_Click)
 			.Parent = @pmEOL
 		End With
@@ -1406,7 +1406,7 @@
 		With pmEOLCR
 			.Name = "pmEOLCR"
 			.Designer = @This
-			.Caption = "MacOS CR"
+			.Caption = mnuEOLCR.Caption
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As MenuItem), @mnuEncoding_Click)
 			.Parent = @pmEOL
 		End With
@@ -1478,8 +1478,8 @@ Private Sub MDIMainType.TimerComponent1_Timer(ByRef Sender As TimerComponent)
 	'Debug.Print "TimerComponent1_Timer================="
 	TimerComponent1.Enabled = False
 	
-	Dim b As Boolean = False
-	Dim MDIChild As MDIChildType Ptr
+	Dim As Boolean b = False
+	Dim As MDIChildType Ptr MDIChild
 	For i As Integer = lstMdiChild.Count - 1 To 0 Step -1
 		MDIChild = lstMdiChild.Item(i)
 		If MDIChild->Destroied Then
@@ -1564,7 +1564,7 @@ End Sub
 
 
 Private Sub MDIMainType.mnuFile_Click(ByRef Sender As MenuItem)
-	Dim i As Integer
+	Dim As Integer i
 	Select Case Sender.Name
 	Case "mnuFileNew"
 		MDIChildNew("")
@@ -1644,7 +1644,7 @@ Private Sub MDIMainType.mnuFile_Click(ByRef Sender As MenuItem)
 End Sub
 
 Private Sub MDIMainType.mnuEdit_Click(ByRef Sender As MenuItem)
-	Dim a As MDIChildType Ptr = actMdiChild
+	Dim As MDIChildType Ptr a = actMdiChild
 	Select Case Sender.Name
 		'Case "mnuEditRedo"
 	Case "mnuEditUndo"
@@ -1705,7 +1705,7 @@ Private Sub MDIMainType.mnuEdit_Click(ByRef Sender As MenuItem)
 End Sub
 
 Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
-	Dim i As Integer
+	Dim As Integer i
 	
 	Select Case Sender.Name
 	Case "mnuViewToolbar"
@@ -1732,8 +1732,8 @@ Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
 		App.DarkMode = Sender.Checked
 		InvalidateRect(0, 0, True)
 	Case "mnuViewWordWarps"
-		Dim a As MDIChildType Ptr = actMdiChild
-		Dim p As WString Ptr
+		Dim As MDIChildType Ptr a = actMdiChild
+		Dim As WString Ptr p
 		WLet(p, a->TextBox1.Text)
 		a->TextBox1.Text = ""
 		If Sender.Checked Then
@@ -1751,7 +1751,7 @@ Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
 		a->TextBox1.Text = *p
 		If p Then Deallocate(p)
 	Case "mnuViewFont"
-		Dim a As MDIChildType Ptr = actMdiChild
+		Dim As MDIChildType Ptr a = actMdiChild
 		FontDialog1.Font.Name = a->TextBox1.Font.Name
 		FontDialog1.Font.Size = a->TextBox1.Font.Size
 		FontDialog1.Font.Bold = a->TextBox1.Font.Bold
@@ -1771,13 +1771,13 @@ Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
 			a->TextBox1.Font.Color = FontDialog1.Font.Color
 		End If
 	Case "mnuViewBackColor"
-		Dim a As MDIChildType Ptr = actMdiChild
+		Dim As MDIChildType Ptr a = actMdiChild
 		ColorDialog1.Color = a->TextBox1.BackColor
 		If ColorDialog1.Execute Then
 			a->TextBox1.BackColor=ColorDialog1.Color
 		End If
 	Case "mnuViewAllFont"
-		Dim a As MDIChildType Ptr = actMdiChild
+		Dim As MDIChildType Ptr a = actMdiChild
 		FontDialog1.Font.Name = a->TextBox1.Font.Name
 		FontDialog1.Font.Size = a->TextBox1.Font.Size
 		FontDialog1.Font.Bold = a->TextBox1.Font.Bold
@@ -1800,7 +1800,7 @@ Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
 			Next
 		End If
 	Case "mnuViewAllBackColor"
-		Dim a As MDIChildType Ptr = actMdiChild
+		Dim As MDIChildType Ptr a = actMdiChild
 		ColorDialog1.Color = a->TextBox1.BackColor
 		If ColorDialog1.Execute Then
 			For i = 0 To lstMdiChild.Count - 1
@@ -1817,7 +1817,7 @@ Private Sub MDIMainType.mnuView_Click(ByRef Sender As MenuItem)
 End Sub
 
 Private Sub MDIMainType.mnuEncoding_Click(ByRef Sender As MenuItem)
-	Dim a As MDIChildType Ptr = actMdiChild
+	Dim As MDIChildType Ptr a = actMdiChild
 	
 	Select Case Sender.Name
 	Case "mnuEncodingPlainText", "pmEncodingPT"
@@ -1846,19 +1846,18 @@ End Sub
 
 Private Sub MDIMainType.mnuConvert_Click(ByRef Sender As MenuItem)
 	timr.Start
-	Dim a As MDIChildType Ptr = actMdiChild
-	Dim t As WString Ptr
+	Dim As MDIChildType Ptr a = actMdiChild
+	Dim As WString Ptr t
 	
-	Dim s As LongInt = a->TextBox1.SelStart
-	Dim l As LongInt = a->TextBox1.SelLength
+	Dim As LongInt s = a->TextBox1.SelStart, l = a->TextBox1.SelLength
 	
 	If l Then
 		t = StrPtr(a->TextBox1.SelText)
 	Else
 		t = StrPtr(a->TextBox1.Text)
 	End If
-	'Dim k As LongInt = Len(*t) * 2 + 2
-	Dim c As WString Ptr ' = CAllocate(k)
+
+	Dim As WString Ptr c ' = CAllocate(k)
 	
 	Select Case Sender.Name
 	Case "mnuConvertTraditional"
@@ -1913,7 +1912,7 @@ End Sub
 Private Sub MDIMainType.mnuTools_Click(ByRef Sender As MenuItem)
 	Select Case Sender.Name
 	Case "mnuToolsFileSearch"
-		Dim frmFileSearch As frmFileSearchType Ptr
+		Dim As frmFileSearchType Ptr frmFileSearch
 		If frmFileSearch = NULL Then frmFileSearch = New frmFileSearchType
 		frmFileSearch->ShowModal(MDIMain)
 		If frmFileSearch Then
@@ -1921,7 +1920,7 @@ Private Sub MDIMainType.mnuTools_Click(ByRef Sender As MenuItem)
 			frmFileSearch = NULL
 		End If
 	Case "mnuToolsFileSync"
-		Dim frmFileSync As frmFileSyncType Ptr
+		Dim As frmFileSyncType Ptr frmFileSync
 		If frmFileSync = NULL Then frmFileSync = New frmFileSyncType
 		frmFileSync->ShowModal(MDIMain)
 		If frmFileSync Then
@@ -1929,7 +1928,7 @@ Private Sub MDIMainType.mnuTools_Click(ByRef Sender As MenuItem)
 			frmFileSync=NULL
 		End If
 	Case "mnuToolsHash"
-		Dim frmHash As frmHashType Ptr
+		Dim As frmHashType Ptr frmHash
 		If frmHash = NULL Then frmHash = New frmHashType
 		frmHash->ShowModal(MDIMain)
 		If frmHash Then
@@ -1937,9 +1936,9 @@ Private Sub MDIMainType.mnuTools_Click(ByRef Sender As MenuItem)
 			frmHash=NULL
 		End If
 	Case "mnuToolsFilePreview"
-		Dim Encode As FileEncodings = -1
-		Dim NewLine As NewLineTypes = -1
-		Dim CodePage As Integer = -1
+		Dim As FileEncodings Encode = -1
+		Dim As NewLineTypes NewLine = -1
+		Dim As Integer CodePage = -1
 		If SelectCodePage("", Encode, CodePage, 2) = False Then Exit Sub
 	End Select
 End Sub
@@ -1949,7 +1948,7 @@ Private Sub MDIMainType.mnuWindow_Click(ByRef Sender As MenuItem)
 	Case "mnuWindowClose"
 		Cast(MDIChildType Ptr, actMdiChild)->CloseForm
 	Case "mnuWindowCloseAll"
-		Dim a As MDIChildType Ptr
+		Dim As MDIChildType Ptr a
 		For i As Integer = lstMdiChild.Count - 1 To 0 Step -1
 			a = lstMdiChild.Item(i)
 			a->CloseForm
@@ -1971,7 +1970,7 @@ Private Sub MDIMainType.mnuWindow_Click(ByRef Sender As MenuItem)
 			SendMessage FClient, WM_MDITILE, MDITILE_VERTICAL, 0
 		#endif
 	Case "mnuWindowMore"
-		Dim MDIList As MDIListType Ptr = New MDIListType
+		Dim As MDIListType Ptr MDIList = New MDIListType
 		MDIList->ShowModal(MDIMain)
 		If MDIList->Tag = NULL Then Exit Sub
 		Cast(MDIChildType Ptr, MDIList->Tag)->SetFocus()
@@ -1992,8 +1991,8 @@ End Sub
 
 '子窗口关闭确认Confirmation of child-window closure.
 Private Function MDIMainType.MDIChildCloseConfirm(ByRef Child As Any Ptr) As MessageResult
-	Dim a As MDIChildType Ptr = Child
-	Dim msr As MessageResult = mrYes
+	Dim As MDIChildType Ptr a = Child
+	Dim As MessageResult msr = mrYes
 	If a->Changed Then
 		msr = MsgBox(!"Do you want to save the changes to?\r\n" & a->Text, "Confirm Close", mtQuestion, btYesNoCancel)
 		Select Case msr
@@ -2008,8 +2007,8 @@ End Function
 
 '寻找文件是否存已在经打开的窗口中Check if the file is already open in an existing window.
 Private Function MDIMainType.MDIChildFind(ByRef FileName As WString) As Integer
-	Dim i As Integer
-	Dim a As MDIChildType Ptr
+	Dim As Integer i
+	Dim As MDIChildType Ptr a
 	For i = 0 To lstMdiChild.Count - 1
 		a = lstMdiChild.Item(i)
 		If FileName = a->File Then
@@ -2022,12 +2021,12 @@ End Function
 '创建新子窗口Create a new child-window.
 Private Function MDIMainType.MDIChildNew(ByRef FileName As WString) As Any Ptr
 	'Debug.Print "MDIChildNew: " & FileName
-	Dim Encode As FileEncodings = -1
-	Dim CodePage As Integer = -1
-	Dim NewLine As NewLineTypes = -1
+	Dim As FileEncodings Encode = -1
+	Dim As Integer CodePage = -1
+	Dim As NewLineTypes NewLine = -1
 	
 	If FileName<> "" Then
-		TextFileGetEncode(FileName, Encode)
+		TextFileGetFormat(FileName, Encode, NewLine)
 		If Encode = FileEncodings.PlainText Then
 			If SelectCodePage(FileName, Encode, CodePage, 0) = False Then Return NULL
 		End If
@@ -2038,8 +2037,8 @@ Private Function MDIMainType.MDIChildNew(ByRef FileName As WString) As Any Ptr
 	End If
 	
 	timr.Start
-	Static ChildIdx As Integer = 0
-	Dim a As MDIChildType Ptr = New MDIChildType
+	Static As Integer ChildIdx = 0
+	Dim As MDIChildType Ptr a = New MDIChildType
 	ChildIdx += 1
 	a->Index = ChildIdx
 	a->File = FileName
@@ -2053,7 +2052,7 @@ Private Function MDIMainType.MDIChildNew(ByRef FileName As WString) As Any Ptr
 	If FileName<> "" Then
 		a->Caption = "Loading [" & FullName2File(FileName) & "] ..."
 		spFileName.Caption = a->Caption
-		Dim p As WString Ptr
+		Dim As WString Ptr p
 		TextFromFile(FileName, p, Encode, NewLine, CodePage)
 		spSpeed.Caption = "Open " & Format(timr.Passed, "#,#0.000") & " sec."
 		a->TextBox1.Text = *p
@@ -2072,7 +2071,7 @@ End Function
 Private Sub MDIMainType.MDIChildActivate(ByRef Child As Any Ptr)
 	'Debug.Print "MDIChildActivate: " & Child
 	actMdiChild = Child
-	Dim a As MDIChildType Ptr = actMdiChild
+	Dim As MDIChildType Ptr a = actMdiChild
 	
 	'重置查找
 	mFindLength = -1
@@ -2083,6 +2082,7 @@ Private Sub MDIMainType.MDIChildActivate(ByRef Child As Any Ptr)
 	If a Then
 		mnuViewWordWarps.Checked = a->TextBox1.WordWraps
 		mnuEncodingPlainText.Caption = !"Plain Text \t(CP: " & IIf(a->CodePage < 0, GetACP(), a->CodePage) & ")"
+		pmEncodingPT.Caption = mnuEncodingPlainText.Caption
 		mnuEncodingPlainText.Checked = IIf(a->Encode = FileEncodings.PlainText, True, False)
 		mnuEncodingUtf8.Checked = IIf(a->Encode = FileEncodings.Utf8, True, False)
 		mnuEncodingUtf8BOM.Checked = IIf(a->Encode = FileEncodings.Utf8BOM, True, False)
@@ -2146,7 +2146,7 @@ Private Sub MDIMainType.MDIChildActivate(ByRef Child As Any Ptr)
 		MenuEnabled(False)
 	End If
 	
-	Dim i As Integer
+	Dim As Integer i
 	mnuWindowsAct = -1
 	For i = 0 To mnuWindowCount
 		If mnuWindows(i)->Tag = actMdiChild Then
@@ -2162,7 +2162,7 @@ End Sub
 Private Sub MDIMainType.MDIChildClick()
 	'Debug.Print "MDIChildClick: " & actMdiChild
 	If actMdiChild = NULL Then Exit Sub
-	Dim a As MDIChildType Ptr = actMdiChild
+	Dim As MDIChildType Ptr a = actMdiChild
 	Dim As Integer sx, sy, ex, ey
 	Dim As Integer s, e
 	
@@ -2212,8 +2212,8 @@ End Sub
 
 '在子窗口的光标处插入文字Insert text at the cursor position in the sub-window.
 Private Sub MDIMainType.MDIChildInsertText(ByRef Child As Any Ptr, ByRef Text As WString)
-	Dim a As MDIChildType Ptr = Child
-	Dim i As Long = a->TextBox1.SelStart
+	Dim As MDIChildType Ptr a = Child
+	Dim As Integer i = a->TextBox1.SelStart
 	a->TextBox1.SelText = Text
 	a->TextBox1.SelStart = i
 	a->TextBox1.SelLength = Len(Text)
@@ -2223,10 +2223,8 @@ End Sub
 Private Sub MDIMainType.MDIChildMenuUpdate()
 	'Debug.Print "MDIChildMenuUpdate"
 	
-	Dim mMax As Integer = 5 'form 0 to mMax
-	Dim i As Integer
-	Dim j As Integer
-	
+	Dim As Integer i, j, mMax = 5 'form 0 to mMax
+		
 	'delete and release menu
 	For i = mnuWindowCount To 0 Step -1
 		mnuWindow.Remove(mnuWindows(i))
@@ -2343,8 +2341,8 @@ Private Sub MDIMainType.MenuEnabled(Enabled As Boolean)
 End Sub
 
 Private Function MDIMainType.FileSave(ByRef Child As Any Ptr) As MessageResult
-	Dim msr As MessageResult = MessageResult.mrYes
-	Dim a As MDIChildType Ptr = Child
+	Dim As MessageResult msr = MessageResult.mrYes
+	Dim As MDIChildType Ptr a = Child
 	If a->File = "" Then
 		msr = FileSaveAs(a)
 	Else
@@ -2358,8 +2356,8 @@ Private Function MDIMainType.FileSave(ByRef Child As Any Ptr) As MessageResult
 End Function
 
 Private Function MDIMainType.FileSaveAs(ByRef Child As Any Ptr) As MessageResult
-	Dim a As MDIChildType Ptr = Child
-	Dim msr As MessageResult = MessageResult.mrYes
+	Dim As MDIChildType Ptr a = Child
+	Dim As MessageResult msr = MessageResult.mrYes
 	SaveFileDialog1.Caption = "Save as: " & a->Text
 	If SaveFileDialog1.Execute() Then
 		If PathFileExists(SaveFileDialog1.FileName) Then
@@ -2381,8 +2379,8 @@ Private Function MDIMainType.FileSaveAs(ByRef Child As Any Ptr) As MessageResult
 End Function
 
 Private Sub MDIMainType.FileOpen(ByRef FileName As WString)
-	Dim a As MDIChildType Ptr
-	Dim i As Integer = MDIChildFind(FileName)
+	Dim As MDIChildType Ptr a
+	Dim As Integer i = MDIChildFind(FileName)
 	If i < 0 Then
 		MDIChildNew(FileName)
 	Else
@@ -2392,15 +2390,15 @@ Private Sub MDIMainType.FileOpen(ByRef FileName As WString)
 End Sub
 
 Private Sub MDIMainType.FileInsert(ByRef Child As Any Ptr, ByRef FileName As WString)
-	Dim Encode As FileEncodings = -1
-	Dim NewLine As NewLineTypes = -1
-	Dim CodePage As Integer = -1
-	TextFileGetEncode(FileName, Encode)
+	Dim As FileEncodings Encode = -1
+	Dim As NewLineTypes NewLine = -1
+	Dim As Integer CodePage = -1
+	TextFileGetFormat(FileName, Encode, NewLine)
 	If Encode = FileEncodings.PlainText Then
 		If SelectCodePage(FileName, Encode, CodePage, 0) = False Then Exit Sub
 	End If
 	timr.Start
-	Dim p As WString Ptr
+	Dim As WString Ptr p
 	TextFromFile(FileName, p, Encode, NewLine, CodePage)
 	MDIChildInsertText(Child, !"\r\nFile Insert Start Here: " & FileName & !"\r\n" & *p & !"\r\nFile Insert End Here: " & FileName & !"!\r\n")
 	If p Then Deallocate(p)
@@ -2412,7 +2410,7 @@ Private Sub MDIMainType.Find(ByRef FindStr As WString, ByVal MatchCase As Boolea
 	If FindStr = "" Then Exit Sub
 	
 	timr.Start
-	Dim a As MDIChildType Ptr = actMdiChild
+	Dim As MDIChildType Ptr a = actMdiChild
 	mFindBack = FindBack
 	
 	'判断是否要重新查找
@@ -2470,6 +2468,7 @@ Private Sub MDIMainType.Find(ByRef FindStr As WString, ByVal MatchCase As Boolea
 			a->TextBox1.SelEnd = a->TextBox1.SelEnd + mFindLength
 			
 			If frmFindReplace.Handle Then
+				'展示找查找总数和所在位置
 				frmFindReplace.lblStatus.Caption = "Find: " & Format(mFindIndex + 1, "#,#0") & " of " & Format(mFindCount, "#,#0")
 			End If
 		End If
@@ -2477,50 +2476,13 @@ Private Sub MDIMainType.Find(ByRef FindStr As WString, ByVal MatchCase As Boolea
 	spSpeed.Caption = "Find " & Format(timr.Passed, "#,#0.000") & " sec."
 End Sub
 
-'旧版本查找
-'Private Sub MDIMainType.Find(ByRef FindStr As WString, ByVal MatchCase As Boolean = False, ByVal FindWarp As Boolean = True, ByVal FindBack As Boolean = False)
-'	timr.Start
-'	Dim a As MDIChildType Ptr = actMdiChild
-'	Dim p As Integer
-'	mFindBack = FindBack
-'	If FindBack Then
-'		p = InStrRev(a->TextBox1.Text, FindStr, a->TextBox1.SelStart)
-'	Else
-'		p = InStr(a->TextBox1.SelEnd + 1, a->TextBox1.Text, FindStr)
-'	End If
-'	If p < 1 And FindWarp Then
-'		If FindBack Then
-'			p = InStrRev(a->TextBox1.Text, FindStr)
-'		Else
-'			p = InStr(a->TextBox1.Text, FindStr)
-'		End If
-'	End If
-'	If p < 1 Then
-'		spSpeed.Caption = "Find " & Format(timr.Passed, "#,#0.000") & " sec."
-'		If FindWarp Then
-'			MsgBox("Find not found.")
-'		Else
-'			If FindBack Then
-'				MsgBox("Find reach to the top of the text.")
-'			Else
-'				MsgBox("Find reach to the buttom of the text.")
-'			End If
-'		End If
-'	Else
-'		a->TextBox1.SelStart = p - 1
-'		a->TextBox1.SelEnd = p + Len(FindStr) - 1
-'		MDIChildClick(actMdiChild)
-'		spSpeed.Caption = "Find " & Format(timr.Passed, "#,#0.000") & " sec."
-'	End If
-'End Sub
-
 '查找替换
 Private Sub MDIMainType.Replace(ByRef FindStr As WString, ByRef ReplaceStr As WString, ByVal MatchCase As Boolean = False, ByVal FindWarp As Boolean = True)
 	If FindStr = "" Then Exit Sub
-	Dim t As TimeMeter
+	Dim As TimeMeter t
 	t.Start
 	
-	Dim a As MDIChildType Ptr = actMdiChild
+	Dim As MDIChildType Ptr a = actMdiChild
 	If a->TextBox1.SelText = FindStr Then
 		a->TextBox1.SelText = ReplaceStr
 		mFindLength = -1
@@ -2534,10 +2496,10 @@ End Sub
 Private Sub MDIMainType.ReplaceAll(ByRef FindStr As WString, ByRef ReplaceStr As WString, ByVal MatchCase As Boolean = False)
 	If FindStr = "" Then Exit Sub
 	timr.Start
-	Dim a As MDIChildType Ptr = actMdiChild
-	Dim s As Integer = a->TextBox1.SelStart
-	Dim t As WString Ptr = NULL
-	Dim i As Integer = ReplaceWStr (a->TextBox1.Text, FindStr, ReplaceStr, t, MatchCase)
+	Dim As MDIChildType Ptr a = actMdiChild
+	Dim As Integer s = a->TextBox1.SelStart
+	Dim As WString Ptr t = NULL
+	Dim As Integer i = ReplaceWStr (a->TextBox1.Text, FindStr, ReplaceStr, t, MatchCase)
 	If i Then
 		a->TextBox1.Text = *t
 		a->TextBox1.SelStart = s
@@ -2550,12 +2512,10 @@ End Sub
 '行排序
 Private Sub MDIMainType.SortLines(SortOrder As SortOrders)
 	timr.Start
-	Dim a As MDIChildType Ptr = actMdiChild
-	Dim wsa() As WString Ptr
-	Dim ws As WString Ptr
-	Dim i As Integer
-	Dim iStr As Integer
-	Dim iEnd As Integer
+	Dim As MDIChildType Ptr a = actMdiChild
+	Dim As WString Ptr wsa(), ws
+	Dim As Integer i, iStr, iEnd 
+	
 	a->TextBox1.GetSel(iStr, iEnd)
 	If a->TextBox1.SelLength < 1 Then
 		i = SplitWStr(a->TextBox1.Text, vbCrLf, wsa())
@@ -2585,10 +2545,10 @@ End Sub
 '跳转到指定行
 Private Sub MDIMainType.GotoLineNo(ByVal LineNumber As Integer)
 	timr.Start
-	Dim a As MDIChildType Ptr = actMdiChild
+	Dim As MDIChildType Ptr a = actMdiChild
 	
 	If LineNumber > a->TextBox1.LinesCount Or LineNumber < 1 Then Exit Sub
-	Dim l As Integer = 1
+	Dim As Integer l = 1
 	l = SendMessage(a->TextBox1.Handle, EM_LINEINDEX, LineNumber - 1, 0)
 	SendMessage(a->TextBox1.Handle, EM_SETSEL, l, l + Len(a->TextBox1.Lines(LineNumber - 1)))
 	SendMessage(a->TextBox1.Handle, EM_SCROLLCARET, 0, 0)

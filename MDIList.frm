@@ -69,7 +69,7 @@ Private Sub MDIListType.Form_Create(ByRef Sender As Control)
 	ListControl1.Clear
 	With MDIMain
 		If .lstMdiChild.Count < 1 Then Exit Sub
-		Dim i As Integer
+		Dim As Integer i
 		For i = 0 To .lstMdiChild.Count - 1
 			ListControl1.AddItem (Cast(MDIChildType Ptr, .lstMdiChild.Item(i))->Text)
 			If .actMdiChild = .lstMdiChild.Item(i) Then ListControl1.ItemIndex = i
