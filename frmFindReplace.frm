@@ -186,16 +186,16 @@ Private Sub frmFindReplaceType.cmd_Click(ByRef Sender As Control)
 		cmdFindBack.Default = True
 		MDIMain.Find(txtFind.Text, chkCase.Checked, chkWarp.Checked, True)
 	Case "cmdShowHide"
-		If txtReplace.Visible= True Then
+		If txtReplace.Visible = True Then
 			cmdShowHide.Text = "Show Replace"
-			txtReplace.Visible= False
-			cmdReplace.Visible= False
-			cmdReplaceAll.Visible= False
+			txtReplace.Visible = False
+			cmdReplace.Visible = False
+			cmdReplaceAll.Visible = False
 		Else
 			cmdShowHide.Text = "Hide Replace"
-			txtReplace.Visible= True
-			cmdReplace.Visible= True
-			cmdReplaceAll.Visible= True
+			txtReplace.Visible = True
+			cmdReplace.Visible = True
+			cmdReplaceAll.Visible = True
 		End If
 		Form_Resize(Me, 0, 0)
 	Case "cmdReplace"
